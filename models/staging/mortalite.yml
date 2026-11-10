@@ -1,0 +1,57 @@
+version: 2
+
+sources:
+  - name: mortalite
+    description: "Données brutes de mortalité régionale dans BigQuery."
+    database: cancer-du-sein-513216
+    schema: mortalite
+    tables:
+      - name: mortalite_region
+        description: "Décès et taux standardisés par année, région, sexe et classe d'âge."
+
+models:
+  - name: stg_mortalite_region
+    description: "Mortalité régionale nettoyée, une ligne par année, région, sexe, tranche d'âge et population de référence. Toutes les lignes source sont conservées."
+    columns:
+      - name: id_mortalite
+        description: "Empreinte SHA-256 de la clé composée du modèle."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code région sur deux caractères, avec zéro initial si nécessaire."
+        tests:
+          - not_null
+      - name: nom_region
+        tests:
+          - not_null
+      - name: sexe
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Femmes', 'Hommes', 'Tous sexes']
+      - name: tranche_age
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Moins de 65 ans', 'Entre 65 et 84 ans', '85 ans et plus']
+      - name: nb_deces
+        description: "Nombre de décès."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_age_pour_100000
+        description: "Taux de mortalité standardisé sur l'âge pour 100 000 habitants."
+        tests:
+          - not_null
+      - name: population_reference_standardisation
+        tests:
+          - not_null
+      - name: donnees_provisoires
+        description: "Vrai pour la valeur source oui, faux pour non ; toute autre valeur devient nulle et fait échouer le test."
+        tests:
+          - not_null
