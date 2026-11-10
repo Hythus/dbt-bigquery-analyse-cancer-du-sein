@@ -1,0 +1,148 @@
+version: 2
+
+sources:
+  - name: data_brute
+    description: "Jeu de données BigQuery contenant les données brutes sur l'oncologie, les séjours hospitaliers et l'incidence (cancer du sein et autres cancers)."
+    database: cancer-du-sein-513216
+    schema: Data_brute
+    tables:
+      - name: charge_france
+        description: "Statistiques hospitalières nationales par pathologie et durée de séjour."
+      - name: charge_region
+        description: "Statistiques hospitalières régionales par pathologie et durée de séjour."
+      - name: depenses_onco
+        description: "Dépenses remboursées par l'Assurance Maladie par type de cancer, statut et poste."
+      - name: depenses_patho
+        description: "Dépenses détaillées par code de pathologie (TOP) et poste."
+      - name: dms_france
+        description: "Durée moyenne de séjour (DMS) au niveau national par pathologie."
+      - name: dms_region
+        description: "Durée moyenne de séjour (DMS) au niveau régional par pathologie."
+      - name: effectifs_region
+        description: "Effectifs de patients et prévalence par région et pathologie."
+      - name: incidence_france
+        description: "Incidence nationale du cancer du sein (taux bruts et standardisés 1990-2023)."
+      - name: incidence_france_age
+        description: "Incidence nationale du cancer du sein par classe d'âge."
+      - name: incidence_region
+        description: "Incidence et mortalité régionales estimées (2007-2016)."
+
+models:
+  - name: stg_charge_france
+    description: "Staging des données de séjours hospitaliers en France (niveaux national)."
+    columns:
+      - name: annee
+        tests:
+          - not_null
+      - name: libelle_pathologie
+        tests:
+          - not_null
+      - name: famille_tumeur
+        tests:
+          - not_null
+
+  - name: stg_charge_region
+    description: "Staging des données de séjours hospitaliers par région."
+    columns:
+      - name: nom_region
+        tests:
+          - not_null
+      - name: annee
+        tests:
+          - not_null
+      - name: libelle_pathologie
+        tests:
+          - not_null
+
+  - name: stg_dms_france
+    description: "Staging de la durée moyenne de séjour (DMS) au niveau France."
+    columns:
+      - name: annee
+        tests:
+          - not_null
+      - name: libelle_pathologie
+        tests:
+          - not_null
+
+  - name: stg_dms_region
+    description: "Staging de la durée moyenne de séjour (DMS) par région."
+    columns:
+      - name: nom_region
+        tests:
+          - not_null
+      - name: annee
+        tests:
+          - not_null
+      - name: libelle_pathologie
+        tests:
+          - not_null
+
+  - name: stg_depenses_onco
+    description: "Staging des dépenses de santé en oncologie par statut et poste."
+    columns:
+      - name: annee
+        tests:
+          - not_null
+      - name: localisation_cancer
+        tests:
+          - not_null
+      - name: statut_cancer
+        tests:
+          - not_null
+      - name: poste_depense
+        tests:
+          - not_null
+
+  - name: stg_depenses_patho
+    description: "Staging des dépenses par pathologie (clef id_depense unique)."
+    columns:
+      - name: id_depense
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_effectifs_region
+    description: "Staging des effectifs de patients et taux de prévalence par région."
+    columns:
+      - name: id_effectif
+        tests:
+          - unique
+          - not_null
+      - name: code_region
+        tests:
+          - not_null
+      - name: nom_region
+        tests:
+          - not_null
+
+  - name: stg_incidence_france
+    description: "Staging de l'incidence nationale historique du cancer du sein chez la femme."
+    columns:
+      - name: annee
+        tests:
+          - unique
+          - not_null
+      - name: sexe
+        tests:
+          - not_null
+
+  - name: stg_incidence_france_age
+    description: "Staging de l'incidence nationale par classe d'âge."
+    columns:
+      - name: annee
+        tests:
+          - not_null
+      - name: tranche_age
+        tests:
+          - not_null
+
+  - name: stg_incidence_region
+    description: "Staging des taux d'incidence et mortalité par région."
+    columns:
+      - name: code_region
+        tests:
+          - unique
+          - not_null
+      - name: nom_region
+        tests:
+          - not_null
