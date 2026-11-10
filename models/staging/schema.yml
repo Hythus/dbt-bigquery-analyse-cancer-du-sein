@@ -14,6 +14,8 @@ sources:
         description: "Dépenses remboursées par l'Assurance Maladie par type de cancer, statut et poste."
       - name: depenses_patho
         description: "Dépenses détaillées par code de pathologie (TOP) et poste."
+      - name: df_radiologie_final
+        description: "Annuaire des centres de radiologie et de mammographie en France."
       - name: dms_france
         description: "Durée moyenne de séjour (DMS) au niveau national par pathologie."
       - name: dms_region
@@ -26,6 +28,18 @@ sources:
         description: "Incidence nationale du cancer du sein par classe d'âge."
       - name: incidence_region
         description: "Incidence et mortalité régionales estimées (2007-2016)."
+
+  - name: depistage
+    description: "Données de dépistage organisé du cancer du sein (Santé Publique France / Insee)."
+    database: cancer-du-sein-513216
+    schema: depistage
+    tables:
+      - name: France_Participation_AGE_2024_2025
+        description: "Participation au dépistage organisé par tranche d'âge pour la campagne 2024-2025."
+      - name: France_Participation_Evolution_2005_2025
+        description: "Évolution annuelle de la participation au dépistage (2005 à 2025)."
+      - name: TAUX_PARTICIPATION_INSEE_BRUT_TRANCHES_AGE_2005_2025
+        description: "Taux de participation brut par période biennale et tranche d'âge (2005 à 2025)."
 
 models:
   - name: stg_charge_france
@@ -144,5 +158,70 @@ models:
           - unique
           - not_null
       - name: nom_region
+        tests:
+          - not_null
+
+  - name: stg_centres_radiologie
+    description: "Staging de l'annuaire des centres de radiologie et de dépistage."
+    columns:
+      - name: id_centre_radiologie
+        tests:
+          - unique
+          - not_null
+      - name: code_region
+        tests:
+          - not_null
+      - name: code_departement
+        tests:
+          - not_null
+      - name: nom_centre_radiologie
+        tests:
+          - not_null
+
+  - name: stg_depistage_age_2024_2025
+    description: "Staging de la participation au dépistage 2024-2025 par département et région."
+    columns:
+      - name: id_depistage_zone
+        tests:
+          - unique
+          - not_null
+      - name: nom_zone_geographique
+        tests:
+          - not_null
+      - name: type_zone_geographique
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['National', 'Région', 'Département']
+
+  - name: stg_depistage_evolution_2005_2025
+    description: "Staging normalisé (au format long/unpivoted par année) de l'évolution du dépistage 2005-2025."
+    columns:
+      - name: id_depistage_evolution
+        tests:
+          - unique
+          - not_null
+      - name: nom_zone_geographique
+        tests:
+          - not_null
+      - name: annee
+        tests:
+          - not_null
+
+  - name: stg_depistage_tranches_age_2005_2025
+    description: "Staging normalisé par période biennale et tranche d'âge du dépistage 2005-2025."
+    columns:
+      - name: id_depistage_tranche_age
+        tests:
+          - unique
+          - not_null
+      - name: nom_zone_geographique
+        tests:
+          - not_null
+      - name: tranche_age
+        tests:
+          - not_null
+      - name: periode_biennale
         tests:
           - not_null
