@@ -28,6 +28,10 @@ sources:
         description: "Incidence nationale du cancer du sein par classe d'âge."
       - name: incidence_region
         description: "Incidence et mortalité régionales estimées (2007-2016)."
+      - name: pop_cible_regions
+        description: "Population cible féminine (50-74 ans) et part cible par région et année."
+      - name: pop_regions_age
+        description: "Population régionale par sexe et tranche d'âge détaillée (1975-2026)."
 
   - name: depistage
     description: "Données de dépistage organisé du cancer du sein (Santé Publique France / Insee)."
@@ -223,5 +227,68 @@ models:
         tests:
           - not_null
       - name: periode_biennale
+        tests:
+          - not_null
+
+  - name: stg_pop_cible_regions
+    description: "Staging de la population cible féminine (50-74 ans) et part cible par région et année."
+    columns:
+      - name: id_pop_cible_region
+        description: "Empreinte SHA-256 de la clé (annee, code_region)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        tests:
+          - not_null
+      - name: code_region
+        tests:
+          - not_null
+      - name: nom_region
+        tests:
+          - not_null
+      - name: population_femmes_50_74_ans
+        tests:
+          - not_null
+      - name: population_femmes_total
+        tests:
+          - not_null
+      - name: part_cible_pct
+        tests:
+          - not_null
+
+  - name: stg_pop_regions_age
+    description: "Staging de la population régionale par sexe et tranche d'âge détaillée."
+    columns:
+      - name: id_pop_region_age
+        description: "Empreinte SHA-256 de la clé (annee, code_region, code_sexe, tranche_age)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        tests:
+          - not_null
+      - name: code_region
+        tests:
+          - not_null
+      - name: nom_region
+        tests:
+          - not_null
+      - name: code_sexe
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['E', 'F', 'H']
+      - name: sexe
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Ensemble', 'Femmes', 'Hommes']
+      - name: tranche_age
+        tests:
+          - not_null
+      - name: population
         tests:
           - not_null
