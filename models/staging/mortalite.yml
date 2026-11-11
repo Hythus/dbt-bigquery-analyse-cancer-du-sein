@@ -8,40 +8,46 @@ sources:
     tables:
       - name: mortalite_region
         description: "Décès et taux standardisés par année, région, sexe et classe d'âge."
+      - name: effectif_mortalite_region
+        description: "Effectifs annuels de décès par région de domicile, tranche d'âge de 10 ans et cause médicale."
 
 models:
   - name: stg_mortalite_region
     description: "Mortalité régionale nettoyée, une ligne par année, région, sexe, tranche d'âge et population de référence. Toutes les lignes source sont conservées."
     columns:
       - name: id_mortalite
-        description: "Empreinte SHA-256 de la clé composée du modèle."
+        description: "Empreinte SHA-256 de la clé composée du modèle (annee, code_region, sexe, tranche_age, population_reference_standardisation)."
         tests:
           - unique
           - not_null
       - name: annee
+        description: "Année d'enregistrement de la mortalité."
         tests:
           - not_null
       - name: code_region
-        description: "Code région sur deux caractères, avec zéro initial si nécessaire."
+        description: "Code région officiel sur 2 caractères (ex. '84', '11')."
         tests:
           - not_null
       - name: nom_region
+        description: "Nom standardisé de la région administrative."
         tests:
           - not_null
       - name: sexe
+        description: "Sexe des personnes concernées ('Femmes', 'Hommes', 'Tous sexes')."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['Femmes', 'Hommes', 'Tous sexes']
       - name: tranche_age
+        description: "Tranche d'âge agrégée ('Moins de 65 ans', 'Entre 65 et 84 ans', '85 ans et plus')."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['Moins de 65 ans', 'Entre 65 et 84 ans', '85 ans et plus']
       - name: nb_deces
-        description: "Nombre de décès."
+        description: "Nombre total de décès enregistrés."
         tests:
           - not_null
       - name: taux_mortalite_std_age_pour_100000
@@ -49,9 +55,51 @@ models:
         tests:
           - not_null
       - name: population_reference_standardisation
+        description: "Population de référence utilisée pour la standardisation (ex. 'Population métropolitaine 1999')."
         tests:
           - not_null
       - name: donnees_provisoires
-        description: "Vrai pour la valeur source oui, faux pour non ; toute autre valeur devient nulle et fait échouer le test."
+        description: "Indicateur booléen spécifiant si la donnée est provisoire (true) ou consolidée (false)."
+        tests:
+          - not_null
+
+  - name: stg_effectif_mortalite_region
+    description: "Effectifs annuels détaillés de décès par région de domicile, tranche d'âge de 10 ans et cause de décès."
+    columns:
+      - name: id_effectif_mortalite
+        description: "Empreinte SHA-256 de la clé unique (annee_deces, code_region, tranche_age_10, sexe, cause_initiale_deces, indicateur)."
+        tests:
+          - unique
+          - not_null
+      - name: annee_deces
+        description: "Année de survenue du décès."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code région officiel de domicile sur 2 caractères."
+        tests:
+          - not_null
+      - name: nom_region
+        description: "Nom standardisé de la région de domicile."
+        tests:
+          - not_null
+      - name: tranche_age_10
+        description: "Classe d'âge par tranche de 10 ans (ex. '< 1', '1 - 4', '5 - 14', ..., '85 - 94', '95 +')."
+        tests:
+          - not_null
+      - name: sexe
+        description: "Sexe des défunts ('Femmes', 'Hommes', 'Tous sexes')."
+        tests:
+          - not_null
+      - name: cause_initiale_deces
+        description: "Libellé de la cause médicale initiale du décès (ex. '2.1.10 Tumeur maligne du sein')."
+        tests:
+          - not_null
+      - name: indicateur
+        description: "Nom de l'indicateur épidémiologique ('Effectifs de décès')."
+        tests:
+          - not_null
+      - name: nb_deces
+        description: "Nombre de décès dénombrés pour cette catégorie."
         tests:
           - not_null

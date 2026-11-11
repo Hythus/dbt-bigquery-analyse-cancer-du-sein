@@ -22,6 +22,8 @@ sources:
         description: "Durée moyenne de séjour (DMS) au niveau régional par pathologie."
       - name: effectifs_region
         description: "Effectifs de patients et prévalence par région et pathologie."
+      - name: effectifs_sein
+        description: "Effectifs détaillés des patientes atteintes de cancer du sein par département, classe d'âge et statut de prise en charge."
       - name: incidence_france
         description: "Incidence nationale du cancer du sein (taux bruts et standardisés 1990-2023)."
       - name: incidence_france_age
@@ -38,178 +40,681 @@ sources:
     database: cancer-du-sein-513216
     schema: depistage
     tables:
+      - name: France_Participation_AGE_2021-2022
+        description: "Participation au dépistage organisé par tranche d'âge pour la campagne 2021-2022."
+      - name: France_Participation_AGE_2022_2023
+        description: "Participation au dépistage organisé par tranche d'âge pour la campagne 2022-2023."
       - name: France_Participation_AGE_2024_2025
         description: "Participation au dépistage organisé par tranche d'âge pour la campagne 2024-2025."
       - name: France_Participation_Evolution_2005_2025
         description: "Évolution annuelle de la participation au dépistage (2005 à 2025)."
       - name: TAUX_PARTICIPATION_INSEE_BRUT_TRANCHES_AGE_2005_2025
         description: "Taux de participation brut par période biennale et tranche d'âge (2005 à 2025)."
+      - name: Taux_Standadise_Depistage_Dep_Region_2016_2025
+        description: "Taux standardisé de participation au dépistage par département et région (2016-2025)."
 
 models:
   - name: stg_charge_france
-    description: "Staging des données de séjours hospitaliers en France (niveaux national)."
+    description: "Staging des données de séjours hospitaliers en France (niveau national)."
     columns:
+      - name: territoire
+        description: "Niveau géographique du séjour ('France entière')."
       - name: annee
+        description: "Année d'activité hospitalière."
         tests:
           - not_null
       - name: libelle_pathologie
+        description: "Libellé de la pathologie oncologique ou médicale concernée."
         tests:
           - not_null
       - name: famille_tumeur
+        description: "Famille ou regroupement nosologique de la tumeur."
         tests:
           - not_null
+      - name: nb_sejours_total
+        description: "Nombre total de séjours hospitaliers enregistrés."
+      - name: nb_sejours_moins_24h
+        description: "Nombre de séjours ambulatoires ou de moins de 24 heures."
+      - name: nb_sejours_moins_24h_programmes
+        description: "Nombre de séjours de moins de 24 heures programmés."
+      - name: nb_sejours_moins_24h_autres
+        description: "Nombre de séjours de moins de 24 heures non programmés."
+      - name: nb_sejours_1j
+        description: "Nombre de séjours d'une journée."
+      - name: nb_sejours_2j
+        description: "Nombre de séjours de 2 jours."
+      - name: nb_sejours_3j
+        description: "Nombre de séjours de 3 jours."
+      - name: nb_sejours_4j
+        description: "Nombre de séjours de 4 jours."
+      - name: nb_sejours_5j
+        description: "Nombre de séjours de 5 jours."
+      - name: nb_sejours_6j
+        description: "Nombre de séjours de 6 jours."
+      - name: nb_sejours_7j
+        description: "Nombre de séjours de 7 jours."
+      - name: nb_sejours_8j
+        description: "Nombre de séjours de 8 jours."
+      - name: nb_sejours_9j
+        description: "Nombre de séjours de 9 jours."
+      - name: nb_sejours_10_19j
+        description: "Nombre de séjours compris entre 10 et 19 jours."
+      - name: nb_sejours_20_29j
+        description: "Nombre de séjours compris entre 20 et 29 jours."
+      - name: nb_sejours_30j_plus
+        description: "Nombre de séjours de 30 jours et plus."
+      - name: part_ambulatoire
+        description: "Part relative des séjours réalisés en ambulatoire."
+      - name: nb_journees_estimees
+        description: "Nombre total de journées d'hospitalisation estimées."
 
   - name: stg_charge_region
     description: "Staging des données de séjours hospitaliers par région."
     columns:
       - name: nom_region
+        description: "Nom standardisé de la région administrative."
         tests:
           - not_null
       - name: annee
+        description: "Année d'activité hospitalière."
         tests:
           - not_null
       - name: libelle_pathologie
+        description: "Libellé de la pathologie oncologique ou médicale concernée."
         tests:
           - not_null
+      - name: famille_tumeur
+        description: "Famille ou regroupement de la tumeur."
+      - name: nb_sejours_total
+        description: "Nombre total de séjours hospitaliers enregistrés dans la région."
+      - name: nb_sejours_moins_24h
+        description: "Nombre de séjours ambulatoires ou de moins de 24 heures."
+      - name: nb_sejours_moins_24h_programmes
+        description: "Nombre de séjours de moins de 24 heures programmés."
+      - name: nb_sejours_moins_24h_autres
+        description: "Nombre de séjours de moins de 24 heures non programmés."
+      - name: nb_sejours_1j
+        description: "Nombre de séjours d'une durée d'un jour."
+      - name: nb_sejours_2j
+        description: "Nombre de séjours de 2 jours."
+      - name: nb_sejours_3j
+        description: "Nombre de séjours de 3 jours."
+      - name: nb_sejours_4j
+        description: "Nombre de séjours de 4 jours."
+      - name: nb_sejours_5j
+        description: "Nombre de séjours de 5 jours."
+      - name: nb_sejours_6j
+        description: "Nombre de séjours de 6 jours."
+      - name: nb_sejours_7j
+        description: "Nombre de séjours de 7 jours."
+      - name: nb_sejours_8j
+        description: "Nombre de séjours de 8 jours."
+      - name: nb_sejours_9j
+        description: "Nombre de séjours de 9 jours."
+      - name: nb_sejours_10_19j
+        description: "Nombre de séjours de 10 à 19 jours."
+      - name: nb_sejours_20_29j
+        description: "Nombre de séjours de 20 à 29 jours."
+      - name: nb_sejours_30j_plus
+        description: "Nombre de séjours de 30 jours et plus."
+      - name: part_ambulatoire
+        description: "Part des prises en charge ambulatoires régionales."
+      - name: nb_journees_estimees
+        description: "Volume total de journées d'hospitalisation estimées."
 
   - name: stg_dms_france
     description: "Staging de la durée moyenne de séjour (DMS) au niveau France."
     columns:
+      - name: territoire
+        description: "Échelon géographique ('France entière')."
       - name: annee
+        description: "Année de calcul de la durée moyenne de séjour."
         tests:
           - not_null
       - name: libelle_pathologie
+        description: "Pathologie concernée."
         tests:
           - not_null
+      - name: famille_tumeur
+        description: "Famille de la tumeur."
+      - name: nb_sejours_24h_plus
+        description: "Nombre de séjours d'hospitalisation complète (24 heures et plus)."
+      - name: duree_moyenne_sejour_jours
+        description: "Durée moyenne de séjour exprimée en jours."
 
   - name: stg_dms_region
     description: "Staging de la durée moyenne de séjour (DMS) par région."
     columns:
       - name: nom_region
+        description: "Nom standardisé de la région administrative."
         tests:
           - not_null
       - name: annee
+        description: "Année de calcul de la durée moyenne de séjour."
         tests:
           - not_null
       - name: libelle_pathologie
+        description: "Pathologie concernée."
         tests:
           - not_null
+      - name: famille_tumeur
+        description: "Famille de la tumeur."
+      - name: nb_sejours_24h_plus
+        description: "Nombre de séjours d'hospitalisation de 24h et plus."
+      - name: duree_moyenne_sejour_jours
+        description: "Durée moyenne de séjour régionale exprimée en jours."
 
   - name: stg_depenses_onco
     description: "Staging des dépenses de santé en oncologie par statut et poste."
     columns:
       - name: annee
+        description: "Année de comptabilisation des dépenses remboursées."
         tests:
           - not_null
       - name: localisation_cancer
+        description: "Localisation anatomique du cancer (ex. 'Cancer du sein')."
         tests:
           - not_null
       - name: statut_cancer
+        description: "Phase clinique ou statut de la pathologie (ex. 'Phase active', 'Surveillance')."
         tests:
           - not_null
+      - name: categorie_depense
+        description: "Grande catégorie de dépense de santé."
       - name: poste_depense
+        description: "Poste détaillé de dépense (ex. 'Médicaments', 'Hospitalisation')."
         tests:
           - not_null
+      - name: secteur_hospitalier
+        description: "Secteur de soins (public, privé ou tous secteurs)."
+      - name: montant_depense_euros
+        description: "Montant total remboursé par l'Assurance Maladie en euros."
+      - name: nb_patients_pathologie
+        description: "Nombre global de patients atteints par la pathologie."
+      - name: nb_patients_recourant_poste
+        description: "Nombre de patients ayant consommé des soins pour ce poste."
+      - name: montant_moyen_par_patient_euros
+        description: "Dépense moyenne remboursée par patient en euros."
 
   - name: stg_depenses_patho
-    description: "Staging des dépenses par pathologie (clef id_depense unique)."
+    description: "Staging des dépenses par pathologie (clé id_depense unique)."
     columns:
       - name: id_depense
+        description: "Identifiant composite unique de la dépense."
         tests:
           - unique
           - not_null
+      - name: cle_annee_pathologie
+        description: "Clé combinant l'année et le code pathologie."
+      - name: annee
+        description: "Année des dépenses de santé."
+      - name: code_pathologie
+        description: "Code TOP de la pathologie de la cartographie Assurance Maladie."
+      - name: libelle_pathologie
+        description: "Libellé de la pathologie."
+      - name: categorie_depense
+        description: "Catégorie de prise en charge."
+      - name: poste_depense
+        description: "Poste de dépense de santé remboursée."
+      - name: montant_depense_euros
+        description: "Montant total des dépenses remboursées en euros."
+      - name: nb_patients_pathologie
+        description: "Nombre de patients suivis pour cette pathologie."
+      - name: nb_patients_recourant_poste
+        description: "Nombre de patients bénéficiant de prestations sur ce poste."
 
   - name: stg_effectifs_region
     description: "Staging des effectifs de patients et taux de prévalence par région."
     columns:
       - name: id_effectif
+        description: "Identifiant unique de la ligne d'effectif régional."
         tests:
           - unique
           - not_null
+      - name: cle_annee_pathologie
+        description: "Clé combinée année et code pathologie."
+      - name: annee
+        description: "Année d'observation épidémiologique."
       - name: code_region
+        description: "Code région officiel sur 2 caractères."
         tests:
           - not_null
       - name: nom_region
+        description: "Nom standardisé de la région administrative."
         tests:
           - not_null
+      - name: code_pathologie
+        description: "Code TOP de la pathologie."
+      - name: libelle_pathologie
+        description: "Dénomination de la pathologie."
+      - name: nb_patients
+        description: "Nombre de patients pris en charge dans la région."
+      - name: population_regionale
+        description: "Population totale de référence de la région."
+      - name: taux_prevalence_pct
+        description: "Taux de prévalence observé en pourcentage."
+
+  - name: stg_effectifs_sein
+    description: "Staging détaillé des effectifs de patientes atteintes de cancer du sein par département et statut."
+    columns:
+      - name: id_effectif_sein
+        description: "Empreinte SHA-256 de la clé unique (annee, code_type_cancer, tranche_age, code_region, code_departement, sexe, niveau_prioritaire)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année de suivi épidémiologique."
+        tests:
+          - not_null
+      - name: libelle_type_cancer
+        description: "Libellé du statut / type de cancer du sein (ex. 'Cancer du sein de la femme en phase active')."
+        tests:
+          - not_null
+      - name: code_type_cancer
+        description: "Code court du cancer du sein (ex. 'CAN_SEI_ACT', 'CAN_SEI_SUR')."
+        tests:
+          - not_null
+      - name: tranche_age
+        description: "Classe d'âge quinquennale (ex. '50-54', '55-59')."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code région officiel sur 2 caractères."
+        tests:
+          - not_null
+      - name: code_departement
+        description: "Code département officiel sur 2 caractères ('999' pour le total régional)."
+        tests:
+          - not_null
+      - name: sexe
+        description: "Sexe observé ('tous sexes', 'femmes')."
+        tests:
+          - not_null
+      - name: niveau_prioritaire
+        description: "Niveau hiérarchique d'agrégation de la pathologie."
+      - name: nb_cas_pris_en_charge
+        description: "Nombre estimé de patientes prises en charge (Ntop)."
+      - name: population_reference
+        description: "Population de référence couverte par l'Assurance Maladie (Npop)."
+      - name: taux_prevalence
+        description: "Taux de prévalence estimé du cancer du sein."
+      - name: ordre_tri
+        description: "Index d'ordre de tri source."
 
   - name: stg_incidence_france
     description: "Staging de l'incidence nationale historique du cancer du sein chez la femme."
     columns:
       - name: annee
+        description: "Année d'estimation de l'incidence."
         tests:
           - unique
           - not_null
       - name: sexe
+        description: "Sexe concerné ('Femmes', 'Hommes')."
         tests:
           - not_null
+      - name: nb_personnes_annees
+        description: "Nombre de personnes-années d'exposition."
+      - name: nb_nouveaux_cas
+        description: "Nombre estimé de nouveaux cas de cancer du sein incident."
+      - name: nb_nouveaux_cas_ic_inf
+        description: "Borne inférieure de l'intervalle de confiance à 95% des nouveaux cas."
+      - name: nb_nouveaux_cas_ic_sup
+        description: "Borne supérieure de l'intervalle de confiance à 95% des nouveaux cas."
+      - name: taux_incidence_brut
+        description: "Taux brut d'incidence pour 100 000 personnes-années."
+      - name: taux_incidence_brut_ic_inf
+        description: "Borne inférieure à 95% du taux d'incidence brut."
+      - name: taux_incidence_brut_ic_sup
+        description: "Borne supérieure à 95% du taux d'incidence brut."
+      - name: taux_incidence_std_europe
+        description: "Taux d'incidence standardisé sur la population européenne (pour 100 000)."
+      - name: taux_incidence_std_europe_ic_inf
+        description: "Borne inférieure du taux standardisé européen."
+      - name: taux_incidence_std_europe_ic_sup
+        description: "Borne supérieure du taux standardisé européen."
+      - name: taux_incidence_std_monde
+        description: "Taux d'incidence standardisé sur la population mondiale (pour 100 000)."
+      - name: taux_incidence_std_monde_ic_inf
+        description: "Borne inférieure du taux standardisé mondial."
+      - name: taux_incidence_std_monde_ic_sup
+        description: "Borne supérieure du taux standardisé mondial."
+      - name: premiere_annee_estimation
+        description: "Première année historique incluse dans la cohorte d'estimation."
 
   - name: stg_incidence_france_age
     description: "Staging de l'incidence nationale par classe d'âge."
     columns:
       - name: annee
+        description: "Année d'estimation de l'incidence."
         tests:
           - not_null
+      - name: sexe
+        description: "Sexe concerné ('Femmes')."
       - name: tranche_age
+        description: "Classe d'âge quinquennale (ex. '50-54 ans')."
         tests:
           - not_null
+      - name: age_min
+        description: "Âge minimum de la classe en années."
+      - name: age_max
+        description: "Âge maximum de la classe en années."
+      - name: poids_standardisation_europe
+        description: "Poids de la classe d'âge dans la population européenne de référence."
+      - name: poids_standardisation_monde
+        description: "Poids de la classe d'âge dans la population mondiale de référence."
+      - name: nb_personnes_annees
+        description: "Volume de personnes-années pour la tranche d'âge."
+      - name: nb_nouveaux_cas
+        description: "Nombre de nouveaux cas incidents dans la tranche d'âge."
+      - name: nb_nouveaux_cas_ic_inf
+        description: "Borne inférieure de l'intervalle de confiance des nouveaux cas."
+      - name: nb_nouveaux_cas_ic_sup
+        description: "Borne supérieure de l'intervalle de confiance des nouveaux cas."
+      - name: taux_incidence_brut
+        description: "Taux d'incidence brut pour la tranche d'âge."
+      - name: taux_incidence_brut_ic_inf
+        description: "Borne inférieure du taux brut."
+      - name: taux_incidence_brut_ic_sup
+        description: "Borne supérieure du taux brut."
 
   - name: stg_incidence_region
     description: "Staging des taux d'incidence et mortalité par région."
     columns:
       - name: code_region
+        description: "Code région officiel sur 2 caractères."
         tests:
           - unique
           - not_null
       - name: nom_region
+        description: "Nom standardisé de la région administrative."
         tests:
           - not_null
+      - name: zone_geographique
+        description: "Zone géographique ('Hexagone', 'Outre-mer')."
+      - name: sexe
+        description: "Sexe des patients analysés."
+      - name: annee_debut_incidence
+        description: "Année de début de la période d'estimation de l'incidence."
+      - name: annee_fin_incidence
+        description: "Année de fin de la période d'estimation de l'incidence."
+      - name: annee_debut_mortalite
+        description: "Année de début de la période d'observation de la mortalité."
+      - name: annee_fin_mortalite
+        description: "Année de fin de la période d'observation de la mortalité."
+      - name: taux_incidence
+        description: "Taux annuel standardisé d'incidence pour 100 000 personnes-années."
+      - name: taux_incidence_ic_inf
+        description: "Borne inférieure de l'intervalle de confiance du taux d'incidence."
+      - name: taux_incidence_ic_sup
+        description: "Borne supérieure de l'intervalle de confiance du taux d'incidence."
+      - name: taux_mortalite
+        description: "Taux annuel standardisé de mortalité pour 100 000 personnes-années."
+      - name: taux_mortalite_ic_inf
+        description: "Borne inférieure de l'intervalle de confiance du taux de mortalité."
+      - name: taux_mortalite_ic_sup
+        description: "Borne supérieure de l'intervalle de confiance du taux de mortalité."
 
   - name: stg_centres_radiologie
     description: "Staging de l'annuaire des centres de radiologie et de dépistage."
     columns:
       - name: id_centre_radiologie
+        description: "Identifiant composite unique du centre de radiologie."
         tests:
           - unique
           - not_null
       - name: code_region
+        description: "Code région d'implantation du centre."
         tests:
           - not_null
+      - name: nom_region
+        description: "Nom standardisé de la région."
       - name: code_departement
+        description: "Numéro officiel du département sur 2 caractères."
         tests:
           - not_null
+      - name: nom_departement
+        description: "Nom du département."
       - name: nom_centre_radiologie
+        description: "Raison sociale ou nom du centre de radiologie/sénologie."
         tests:
           - not_null
+      - name: ville
+        description: "Commune d'implantation de l'équipement."
 
-  - name: stg_depistage_age_2024_2025
-    description: "Staging de la participation au dépistage 2024-2025 par département et région."
+  - name: stg_depistage_age_2021_2022
+    description: "Staging de la participation au dépistage 2021-2022 par département et région."
     columns:
       - name: id_depistage_zone
+        description: "Empreinte SHA-256 de la zone (nom_zone_geographique, type_zone_geographique)."
         tests:
           - unique
           - not_null
-      - name: nom_zone_geographique
-        tests:
-          - not_null
       - name: type_zone_geographique
+        description: "Niveau géographique ('National', 'Région', 'Département')."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['National', 'Région', 'Département']
+      - name: nom_zone_geographique
+        description: "Dénomination de la collectivité territoriale ou territoire."
+        tests:
+          - not_null
+      - name: population_cible_50_74_ans
+        description: "Population féminine éligible au dépistage (50-74 ans)."
+      - name: nb_femmes_depistees_50_74_ans
+        description: "Nombre effectif de femmes dépistées sur la campagne."
+      - name: taux_participation_brut_pct_50_74_ans
+        description: "Taux de participation brut en pourcentage (50-74 ans)."
+      - name: taux_participation_std_pct_50_74_ans
+        description: "Taux de participation standardisé sur l'âge en pourcentage (50-74 ans)."
+      - name: population_cible_50_54_ans
+        description: "Population cible pour la tranche 50-54 ans."
+      - name: nb_femmes_depistees_50_54_ans
+        description: "Nombre de femmes dépistées de 50 à 54 ans."
+      - name: taux_participation_brut_pct_50_54_ans
+        description: "Taux brut de participation pour la tranche 50-54 ans."
+      - name: population_cible_55_59_ans
+        description: "Population cible pour la tranche 55-59 ans."
+      - name: nb_femmes_depistees_55_59_ans
+        description: "Nombre de femmes dépistées de 55 à 59 ans."
+      - name: taux_participation_brut_pct_55_59_ans
+        description: "Taux brut de participation pour la tranche 55-59 ans."
+      - name: population_cible_60_64_ans
+        description: "Population cible pour la tranche 60-64 ans."
+      - name: nb_femmes_depistees_60_64_ans
+        description: "Nombre de femmes dépistées de 60 à 64 ans."
+      - name: taux_participation_brut_pct_60_64_ans
+        description: "Taux brut de participation pour la tranche 60-64 ans."
+      - name: population_cible_65_69_ans
+        description: "Population cible pour la tranche 65-69 ans."
+      - name: nb_femmes_depistees_65_69_ans
+        description: "Nombre de femmes dépistées de 65 à 69 ans."
+      - name: taux_participation_brut_pct_65_69_ans
+        description: "Taux brut de participation pour la tranche 65-69 ans."
+      - name: population_cible_70_74_ans
+        description: "Population cible pour la tranche 70-74 ans."
+      - name: nb_femmes_depistees_70_74_ans
+        description: "Nombre de femmes dépistées de 70 à 74 ans."
+      - name: taux_participation_brut_pct_70_74_ans
+        description: "Taux brut de participation pour la tranche 70-74 ans."
+
+  - name: stg_depistage_age_2022_2023
+    description: "Staging de la participation au dépistage 2022-2023 par département et région."
+    columns:
+      - name: id_depistage_zone
+        description: "Empreinte SHA-256 de la zone (nom_zone_geographique, type_zone_geographique)."
+        tests:
+          - unique
+          - not_null
+      - name: type_zone_geographique
+        description: "Niveau géographique ('National', 'Région', 'Département')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['National', 'Région', 'Département']
+      - name: nom_zone_geographique
+        description: "Dénomination de la collectivité territoriale ou territoire."
+        tests:
+          - not_null
+      - name: population_cible_50_74_ans
+        description: "Population féminine éligible au dépistage (50-74 ans)."
+      - name: nb_femmes_depistees_50_74_ans
+        description: "Nombre effectif de femmes dépistées sur la campagne."
+      - name: taux_participation_brut_pct_50_74_ans
+        description: "Taux de participation brut en pourcentage (50-74 ans)."
+      - name: taux_participation_std_pct_50_74_ans
+        description: "Taux de participation standardisé sur l'âge en pourcentage (50-74 ans)."
+      - name: population_cible_50_54_ans
+        description: "Population cible pour la tranche 50-54 ans."
+      - name: nb_femmes_depistees_50_54_ans
+        description: "Nombre de femmes dépistées de 50 à 54 ans."
+      - name: taux_participation_brut_pct_50_54_ans
+        description: "Taux brut de participation pour la tranche 50-54 ans."
+      - name: population_cible_55_59_ans
+        description: "Population cible pour la tranche 55-59 ans."
+      - name: nb_femmes_depistees_55_59_ans
+        description: "Nombre de femmes dépistées de 55 à 59 ans."
+      - name: taux_participation_brut_pct_55_59_ans
+        description: "Taux brut de participation pour la tranche 55-59 ans."
+      - name: population_cible_60_64_ans
+        description: "Population cible pour la tranche 60-64 ans."
+      - name: nb_femmes_depistees_60_64_ans
+        description: "Nombre de femmes dépistées de 60 à 64 ans."
+      - name: taux_participation_brut_pct_60_64_ans
+        description: "Taux brut de participation pour la tranche 60-64 ans."
+      - name: population_cible_65_69_ans
+        description: "Population cible pour la tranche 65-69 ans."
+      - name: nb_femmes_depistees_65_69_ans
+        description: "Nombre de femmes dépistées de 65 à 69 ans."
+      - name: taux_participation_brut_pct_65_69_ans
+        description: "Taux brut de participation pour la tranche 65-69 ans."
+      - name: population_cible_70_74_ans
+        description: "Population cible pour la tranche 70-74 ans."
+      - name: nb_femmes_depistees_70_74_ans
+        description: "Nombre de femmes dépistées de 70 à 74 ans."
+      - name: taux_participation_brut_pct_70_74_ans
+        description: "Taux brut de participation pour la tranche 70-74 ans."
+
+  - name: stg_depistage_age_2024_2025
+    description: "Staging de la participation au dépistage 2024-2025 par département et région."
+    columns:
+      - name: id_depistage_zone
+        description: "Empreinte SHA-256 de la zone (nom_zone_geographique, type_zone_geographique)."
+        tests:
+          - unique
+          - not_null
+      - name: type_zone_geographique
+        description: "Niveau géographique ('National', 'Région', 'Département')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['National', 'Région', 'Département']
+      - name: nom_zone_geographique
+        description: "Dénomination de la collectivité territoriale ou territoire."
+        tests:
+          - not_null
+      - name: population_cible_50_74_ans
+        description: "Population féminine éligible au dépistage (50-74 ans)."
+      - name: nb_femmes_depistees_50_74_ans
+        description: "Nombre de femmes ayant effectué une mammographie de dépistage."
+      - name: taux_participation_brut_pct_50_74_ans
+        description: "Taux brut de participation observé (50-74 ans)."
+      - name: taux_participation_std_pct_50_74_ans
+        description: "Taux de participation standardisé sur l'âge européen (50-74 ans)."
+      - name: population_cible_50_54_ans
+        description: "Population cible féminine de 50 à 54 ans."
+      - name: nb_femmes_depistees_50_54_ans
+        description: "Nombre de dépistages pour les 50-54 ans."
+      - name: taux_participation_brut_pct_50_54_ans
+        description: "Taux de participation brut des 50-54 ans."
+      - name: population_cible_55_59_ans
+        description: "Population cible féminine de 55 à 59 ans."
+      - name: nb_femmes_depistees_55_59_ans
+        description: "Nombre de dépistages pour les 55-59 ans."
+      - name: taux_participation_brut_pct_55_59_ans
+        description: "Taux de participation brut des 55-59 ans."
+      - name: population_cible_60_64_ans
+        description: "Population cible féminine de 60 à 64 ans."
+      - name: nb_femmes_depistees_60_64_ans
+        description: "Nombre de dépistages pour les 60-64 ans."
+      - name: taux_participation_brut_pct_60_64_ans
+        description: "Taux de participation brut des 60-64 ans."
+      - name: population_cible_65_69_ans
+        description: "Population cible féminine de 65 à 69 ans."
+      - name: nb_femmes_depistees_65_69_ans
+        description: "Nombre de dépistages pour les 65-69 ans."
+      - name: taux_participation_brut_pct_65_69_ans
+        description: "Taux de participation brut des 65-69 ans."
+      - name: population_cible_70_74_ans
+        description: "Population cible féminine de 70 à 74 ans."
+      - name: nb_femmes_depistees_70_74_ans
+        description: "Nombre de dépistages pour les 70-74 ans."
+      - name: taux_participation_brut_pct_70_74_ans
+        description: "Taux de participation brut des 70-74 ans."
 
   - name: stg_depistage_evolution_2005_2025
-    description: "Staging normalisé (au format long/unpivoted par année) de l'évolution du dépistage 2005-2025."
+    description: "Staging normalisé de l'évolution annuelle du dépistage 2005-2025."
     columns:
       - name: id_depistage_evolution
+        description: "Empreinte SHA-256 de la clé (nom_zone_geographique, annee)."
         tests:
           - unique
           - not_null
       - name: nom_zone_geographique
+        description: "Nom standardisé du département ou de la région."
         tests:
           - not_null
+      - name: type_zone_geographique
+        description: "Type de collectivité ('Département', 'Région', 'National')."
       - name: annee
+        description: "Année de campagne de dépistage."
+        tests:
+          - not_null
+      - name: population_cible
+        description: "Population cible estimée sur l'année."
+      - name: nb_femmes_depistees
+        description: "Nombre effectif de femmes dépistées."
+      - name: taux_participation_std_pct
+        description: "Taux de participation standardisé sur l'âge en pourcentage."
+
+  - name: stg_depistage_taux_standardise_2016_2025
+    description: "Staging des taux standardisés de participation au dépistage par département et région (2016-2025)."
+    columns:
+      - name: id_depistage_taux_std
+        description: "Empreinte SHA-256 de la clé (periode_biennale, code_departement)."
+        tests:
+          - unique
+          - not_null
+      - name: periode_biennale
+        description: "Période biennale d'évaluation du dépistage (ex. '2024-2025')."
+        tests:
+          - not_null
+      - name: annee_fin_periode
+        description: "Dernière année calendaire de la période biennale (ex. 2025)."
+        tests:
+          - not_null
+      - name: code_departement
+        description: "Code officiel du département sur 2 caractères."
+        tests:
+          - not_null
+      - name: nom_departement
+        description: "Nom officiel du département."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel de la région sur 2 caractères."
+        tests:
+          - not_null
+      - name: nom_region
+        description: "Nom standardisé de la région."
+        tests:
+          - not_null
+      - name: taux_participation_std_pct
+        description: "Taux de participation standardisé Insee en pourcentage."
         tests:
           - not_null
 
@@ -217,18 +722,28 @@ models:
     description: "Staging normalisé par période biennale et tranche d'âge du dépistage 2005-2025."
     columns:
       - name: id_depistage_tranche_age
+        description: "Empreinte SHA-256 de la clé (nom_zone_geographique, tranche_age, periode_biennale)."
         tests:
           - unique
           - not_null
       - name: nom_zone_geographique
+        description: "Dénomination du territoire."
         tests:
           - not_null
+      - name: type_zone_geographique
+        description: "Échelon territorial ('Département', 'Région', 'National')."
       - name: tranche_age
+        description: "Classe d'âge quinquennale (ex. '50-54 ans', 'Ensemble 50-74 ans')."
         tests:
           - not_null
       - name: periode_biennale
+        description: "Période biennale d'observation."
         tests:
           - not_null
+      - name: annee_fin_periode
+        description: "Dernière année de la période biennale."
+      - name: taux_participation_brut_pct
+        description: "Taux de participation brut Insee en pourcentage."
 
   - name: stg_pop_cible_regions
     description: "Staging de la population cible féminine (50-74 ans) et part cible par région et année."
@@ -239,21 +754,29 @@ models:
           - unique
           - not_null
       - name: annee
+        description: "Année de l'estimation démographique Insee."
         tests:
           - not_null
       - name: code_region
+        description: "Code région officiel sur 2 caractères."
         tests:
           - not_null
       - name: nom_region
+        description: "Nom standardisé de la région administrative."
         tests:
           - not_null
+      - name: zone_geographique
+        description: "Zone géographique ('Hexagone', 'Outre-mer')."
       - name: population_femmes_50_74_ans
+        description: "Nombre de femmes âgées de 50 à 74 ans (population cible du dépistage)."
         tests:
           - not_null
       - name: population_femmes_total
+        description: "Population féminine totale de la région tous âges confondus."
         tests:
           - not_null
       - name: part_cible_pct
+        description: "Proportion de femmes de 50 à 74 ans dans la population féminine régionale (en %)."
         tests:
           - not_null
 
@@ -266,29 +789,44 @@ models:
           - unique
           - not_null
       - name: annee
+        description: "Année de recensement démographique Insee."
         tests:
           - not_null
       - name: code_region
+        description: "Code région officiel sur 2 caractères."
         tests:
           - not_null
       - name: nom_region
+        description: "Nom standardisé de la région administrative."
         tests:
           - not_null
+      - name: zone_geographique
+        description: "Zone géographique ('Hexagone', 'Outre-mer')."
       - name: code_sexe
+        description: "Code court du sexe ('E' pour Ensemble, 'F' pour Femmes, 'H' pour Hommes)."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['E', 'F', 'H']
       - name: sexe
+        description: "Libellé complet du sexe ('Ensemble', 'Femmes', 'Hommes')."
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['Ensemble', 'Femmes', 'Hommes']
       - name: tranche_age
+        description: "Tranche d'âge détaillée (ex. '00-04 ans', '50-54 ans', '95 ans et plus')."
         tests:
           - not_null
+      - name: age_min
+        description: "Borne d'âge minimale en années."
+      - name: age_max
+        description: "Borne d'âge maximale en années (null pour les classes ouvertes)."
       - name: population
+        description: "Effectif de population Insee pour la tranche d'âge et le sexe."
         tests:
           - not_null
+      - name: is_resultat_precoce
+        description: "Indicateur booléen spécifiant si l'estimation Insee est précoce/provisoire."
