@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: int_charge_hospitaliere_sein
-    description: "Table intermédiaire combinant la charge hospitalière et la durée moyenne de séjour (DMS) pour le cancer du sein par région et année."
+    description: "Table intermédiaire consolidée combinant la charge hospitalière, la durée moyenne de séjour (DMS), l'effectif de patientes et les composantes brutes oncologiques pour le cancer du sein par région (2018-2024)."
     columns:
       - name: id_charge_hospitaliere
         description: "Empreinte SHA-256 unique combinant l'année et le code région."
@@ -42,16 +42,32 @@ models:
         tests:
           - not_null
       - name: nbre_hospitalisation
-        description: "Nombre total d'hospitalisations enregistrées, tous types de séjours confondus [Unité : Nombre d'hospitalisations]."
+        description: "Nombre total d'hospitalisations enregistrées pour le cancer du sein, tous types de séjours confondus [Unité : Nombre d'hospitalisations]."
+        tests:
+          - not_null
+      - name: nb_sejours_sein
+        description: "Numérateur brut DAX : nombre d'hospitalisations pour cancer du sein de la région [Unité : Nombre de séjours]."
+        tests:
+          - not_null
+      - name: nb_sejours_onco_total
+        description: "Dénominateur brut DAX : volume total d'hospitalisations pour toutes pathologies oncologiques de la région [Unité : Nombre de séjours]."
         tests:
           - not_null
       - name: ratio_cancer_sein_patho_onco
-        description: "Ratio du nombre d'hospitalisations pour cancer du sein par rapport à l'ensemble des hospitalisations oncologiques de la région [Unité : Ratio / Proportion entre 0 et 1 (sans unité)]."
+        description: "Ratio d'activité oncologique précalculé à la ligne (nb_sejours_sein / nb_sejours_onco_total) [Unité : Ratio / Proportion entre 0 et 1]."
+        tests:
+          - not_null
+      - name: nb_patientes
+        description: "Effectif régional de patientes prises en charge pour cancer du sein (actif et sous surveillance) [Unité : Nombre de patientes]."
+        tests:
+          - not_null
+      - name: taux_sejours_par_patiente
+        description: "Taux moyen d'hospitalisation par patiente atteinte (nbre_hospitalisation / nb_patientes) [Unité : Nombre moyen de séjours par patiente]."
         tests:
           - not_null
 
   - name: int_depenses_regionales_sein
-    description: "Table intermédiaire estimant les dépenses régionales d'Assurance Maladie pour le cancer du sein par grande catégorie, au prorata des patientes par sous-pathologie (actif vs sous surveillance)."
+    description: "Table intermédiaire consolidée estimant les dépenses régionales d'Assurance Maladie pour le cancer du sein, l'effectif de patientes et les composantes brutes oncologiques par grande catégorie (2018-2024)."
     columns:
       - name: id_depense_regionale
         description: "Empreinte SHA-256 unique combinant l'année, le code région et le type de dépense."
@@ -59,7 +75,7 @@ models:
           - unique
           - not_null
       - name: annee
-        description: "Année des dépenses remboursées (2015-2024) [Unité : Année (AAAA)]."
+        description: "Année des dépenses remboursées (2018-2024) [Unité : Année (AAAA)]."
         tests:
           - not_null
       - name: code_region
@@ -79,10 +95,26 @@ models:
         tests:
           - not_null
       - name: montant_euros
-        description: "Montant régional estimé des dépenses remboursées, calculé au prorata des effectifs régionaux (cancer actif vs surveillance) [Unité : Euros (€)]."
+        description: "Montant régional estimé des dépenses remboursées pour le cancer du sein [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: montant_sein_euros
+        description: "Numérateur brut DAX : montant des dépenses remboursées pour le cancer du sein [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: montant_onco_total_euros
+        description: "Dénominateur brut DAX : montant total des dépenses oncologiques régionales pour cette catégorie de soins [Unité : Euros (€)]."
         tests:
           - not_null
       - name: ratio_cancer_sein_patho_onco
-        description: "Part des dépenses du cancer du sein par rapport à l'ensemble des dépenses oncologiques régionales pour cette catégorie de soins [Unité : Ratio / Proportion entre 0 et 1 (sans unité)]."
+        description: "Part des dépenses précalculée à la ligne (montant_sein_euros / montant_onco_total_euros) [Unité : Ratio / Proportion entre 0 et 1]."
+        tests:
+          - not_null
+      - name: nb_patientes
+        description: "Effectif régional de patientes prises en charge pour cancer du sein (actif et sous surveillance) [Unité : Nombre de patientes]."
+        tests:
+          - not_null
+      - name: cout_moyen_par_patiente_euros
+        description: "Dépense moyenne remboursée par patiente régionale pour cette catégorie de soins (montant_euros / nb_patientes) [Unité : Euros (€) par patiente]."
         tests:
           - not_null

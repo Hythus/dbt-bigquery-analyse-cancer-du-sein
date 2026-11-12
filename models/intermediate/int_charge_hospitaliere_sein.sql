@@ -12,6 +12,7 @@ with charge as (
         (nb_sejours_1j + nb_sejours_2j + nb_sejours_3j + nb_sejours_4j + nb_sejours_5j + nb_sejours_6j + nb_sejours_7j) as nb_sejours_inf_ou_egal_7j,
         (nb_sejours_8j + nb_sejours_9j + nb_sejours_10_19j + nb_sejours_20_29j + nb_sejours_30j_plus) as nb_sejours_sup_7j
     from {{ ref('stg_charge_region') }}
+    where annee between 2018 and 2024
 
 ),
 
@@ -26,6 +27,7 @@ dms as (
         libelle_pathologie,
         duree_moyenne_sejour_jours as dms
     from {{ ref('stg_dms_region') }}
+    where annee between 2018 and 2024
 
 ),
 
@@ -49,6 +51,19 @@ total_onco as (
 
 ),
 
+patientes as (
+
+    select
+        annee,
+        code_region,
+        sum(nb_patients) as nb_patientes
+    from {{ ref('stg_effectifs_region') }}
+    where code_pathologie in ('CAN_SEI_ACT', 'CAN_SEI_SUR')
+      and annee between 2018 and 2024
+    group by 1, 2
+
+),
+
 joined as (
 
     select
@@ -61,7 +76,11 @@ joined as (
         cast(c.nb_sejours_inf_ou_egal_7j as int64) as nb_sejours_inf_ou_egal_7j,
         cast(c.nb_sejours_sup_7j as int64) as nb_sejours_sup_7j,
         cast(c.nb_sejours_total as int64) as nbre_hospitalisation,
-        round(safe_divide(c.nb_sejours_total, t.nb_sejours_total_onco), 4) as ratio_cancer_sein_patho_onco
+        cast(c.nb_sejours_total as int64) as nb_sejours_sein,
+        cast(t.nb_sejours_total_onco as int64) as nb_sejours_onco_total,
+        round(safe_divide(c.nb_sejours_total, t.nb_sejours_total_onco), 4) as ratio_cancer_sein_patho_onco,
+        cast(p.nb_patientes as int64) as nb_patientes,
+        round(safe_divide(c.nb_sejours_total, p.nb_patientes), 4) as taux_sejours_par_patiente
 
     from charge c
     left join dms d
@@ -73,6 +92,9 @@ joined as (
     left join total_onco t
       on c.annee = t.annee
      and c.nom_region = t.nom_region
+    left join patientes p
+      on c.annee = p.annee
+     and r.code_region = p.code_region
     where c.libelle_pathologie = 'Tumeur maligne du sein'
 
 )
@@ -83,4 +105,3 @@ select
     )))) as id_charge_hospitaliere,
     *
 from joined
-

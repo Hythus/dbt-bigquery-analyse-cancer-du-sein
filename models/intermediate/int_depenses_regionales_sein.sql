@@ -8,6 +8,7 @@ with dep_nat as (
         max(nb_patients_pathologie) as nb_patients_france_officiel,
         sum(montant_depense_euros) as montant_national_euros
     from {{ ref('stg_depenses_onco') }}
+    where annee between 2018 and 2024
     group by 1, 2, 3, 4
 
 ),
@@ -31,6 +32,7 @@ eff_reg as (
         end as statut_cancer,
         nb_patients as nb_patients_region
     from {{ ref('stg_effectifs_region') }}
+    where annee between 2018 and 2024
 
 ),
 
@@ -77,9 +79,21 @@ total_onco_reg as (
         code_region,
         nom_region,
         categorie_depense,
-        sum(montant_regional_euros) as montant_total_onco_regional
+        round(sum(montant_regional_euros), 2) as montant_total_onco_regional
     from aggr_par_patho
     group by 1, 2, 3, 4
+
+),
+
+patientes_sein as (
+
+    select
+        annee,
+        code_region,
+        sum(nb_patients_region) as nb_patientes
+    from eff_reg
+    where localisation_cancer = 'Cancer du sein de la femme'
+    group by 1, 2
 
 ),
 
@@ -92,7 +106,11 @@ joined as (
         s.localisation_cancer as pathologie,
         s.categorie_depense as type_de_depense,
         s.montant_regional_euros as montant_euros,
-        round(safe_divide(s.montant_regional_euros, t.montant_total_onco_regional), 4) as ratio_cancer_sein_patho_onco
+        s.montant_regional_euros as montant_sein_euros,
+        t.montant_total_onco_regional as montant_onco_total_euros,
+        round(safe_divide(s.montant_regional_euros, t.montant_total_onco_regional), 4) as ratio_cancer_sein_patho_onco,
+        cast(p.nb_patientes as int64) as nb_patientes,
+        round(safe_divide(s.montant_regional_euros, p.nb_patientes), 2) as cout_moyen_par_patiente_euros
 
     from aggr_par_patho s
     inner join total_onco_reg t
@@ -100,6 +118,9 @@ joined as (
      and s.code_region = t.code_region
      and s.nom_region = t.nom_region
      and s.categorie_depense = t.categorie_depense
+    left join patientes_sein p
+      on s.annee = p.annee
+     and s.code_region = p.code_region
     where s.localisation_cancer = 'Cancer du sein de la femme'
 
 )
@@ -110,4 +131,3 @@ select
     )))) as id_depense_regionale,
     *
 from joined
-

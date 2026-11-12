@@ -93,7 +93,7 @@ Les modèles intermédiaires croisent les données hospitalières, épidémiolog
 
 ### 3.1. `int_charge_hospitaliere_sein` : Activité Hospitalière et DMS
 
-Ce modèle regroupe la charge de soins et la durée de séjour pour le cancer du sein par région et année (période 2018-2024, 126 observations).
+Ce modèle regroupe la charge de soins, la durée de séjour et les effectifs de patientes pour le cancer du sein par région et année (période commune 2018-2024, 126 observations).
 
 #### Choix de Modélisation et Règles de Gestion :
 * **Filtrage nosologique strict** : sélection exclusive de la modalité `'Tumeur maligne du sein'` (excluant les tumeurs bénignes).
@@ -105,14 +105,19 @@ Ce modèle regroupe la charge de soins et la durée de séjour pour le cancer du
     $$\text{Séjours} > 7\text{j} = \text{nb\_sejours\_8j} + \text{nb\_sejours\_9j} + \text{nb\_sejours\_10\_19j} + \text{nb\_sejours\_20\_29j} + \text{nb\_sejours\_30j\_plus}$$
 * **Volumétrie totale** : `nbre_hospitalisation` reprend le nombre total de séjours (`nb_sejours_total`).
 * **Durée Moyenne de Séjour (`dms_jours`)** : jointure avec `stg_dms_region` et arrondi à 2 décimales (unité : jours).
-* **Ratio d'impact oncologique régional** :
-  $$\text{ratio\_cancer\_sein\_patho\_onco} = \frac{\text{Hospitalisations tumeur maligne du sein}}{\sum \text{Hospitalisations de toutes les tumeurs (région, même année)}}$$
+* **Composantes brutes DAX pour Power BI** :
+  * `nb_sejours_sein` : numérateur brut d'hospitalisations pour cancer du sein.
+  * `nb_sejours_onco_total` : dénominateur brut d'hospitalisations oncologiques de la région.
+  * `ratio_cancer_sein_patho_onco` : ratio précalculé à la ligne.
+* **Consolidation patientes et intensité de soins** :
+  * `nb_patientes` : effectif régional de patientes atteintes (`CAN_SEI_ACT` + `CAN_SEI_SUR`).
+  * `taux_sejours_par_patiente` = $\frac{\text{nb\_sejours\_sein}}{\text{nb\_patientes}}$ (nombre moyen de séjours hospitaliers par patiente).
 
 ---
 
 ### 3.2. `int_depenses_regionales_sein` : Ventilation Proratisée des Coûts
 
-Ce modèle reconstruit les dépenses d'Assurance Maladie pour le cancer du sein au niveau régional par grande catégorie de soins (2015-2024, 540 observations : 18 régions $\times$ 10 années $\times$ 3 catégories).
+Ce modèle reconstruit les dépenses d'Assurance Maladie pour le cancer du sein au niveau régional par grande catégorie de soins sur la période commune (2018-2024, 378 observations : 18 régions $\times$ 7 années $\times$ 3 catégories).
 
 #### Problématique Métier :
 Les données financières brutes de l'Assurance Maladie (`stg_depenses_onco`) ne sont disponibles qu'à l'**échelon national (France entière)**, tandis que la répartition épidémiologique des patientes (`stg_effectifs_region`) est renseignée par région.
@@ -133,15 +138,19 @@ Les données financières brutes de l'Assurance Maladie (`stg_depenses_onco`) ne
      * `Hospitalisations (tous secteurs)`
      * `Soins de ville`
      * `Prestations en espèces` (indemnités journalières, etc.)
-5. **Ratio Cancer du Sein / Pathologie Onco Régionale** :
-   * La même clé de répartition a été appliquée aux 4 autres localisations cancéreuses (`CAN_BPU` bronchopulmonaire, `CAN_CRE` colorectal, `CAN_PRO` prostate, `CAN_AUT` autres) :
-     $$\text{ratio\_cancer\_sein\_patho\_onco} = \frac{\text{Dépenses régionales cancer du sein}}{\text{Dépenses totales oncologiques régionales (même catégorie, même année)}}$$
+5. **Composantes brutes DAX pour Power BI** :
+   * `montant_sein_euros` : numérateur brut des dépenses régionales de cancer du sein.
+   * `montant_onco_total_euros` : dénominateur brut de l'ensemble des dépenses oncologiques régionales pour la même catégorie de soins.
+   * `ratio_cancer_sein_patho_onco` : ratio précalculé à la ligne.
+6. **Consolidation médico-économique par patiente** :
+   * `nb_patientes` : effectif régionalisé total pour le cancer du sein.
+   * `cout_moyen_par_patiente_euros` = $\frac{\text{montant\_euros}}{\text{nb\_patientes}}$ (dépense moyenne par patiente pour ce poste de soins).
 
 ---
 
 ## 4. Tests de Données et Validation de Qualité
 
-Le projet intègre **144 tests dbt** exécutés lors de chaque build :
+Le projet intègre **152 tests dbt** exécutés lors de chaque build :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés synthétiques SHA-256 (`id_charge_hospitaliere`, `id_depense_regionale`, `id_pop_region_age`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).
