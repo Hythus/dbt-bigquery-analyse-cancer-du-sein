@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: int_charge_hospitaliere_sein
+    description: "Table intermédiaire combinant la charge hospitalière et la durée moyenne de séjour (DMS) pour le cancer du sein par région et année."
+    columns:
+      - name: id_charge_hospitaliere
+        description: "Empreinte SHA-256 unique combinant l'année et le code région."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année d'activité hospitalière (2018-2024)."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel de la région sur 2 caractères."
+        tests:
+          - not_null
+      - name: libelle_region
+        description: "Nom standardisé de la région administrative."
+        tests:
+          - not_null
+      - name: pathologie
+        description: "Libellé de la pathologie oncologique ciblée ('Tumeur maligne du sein')."
+        tests:
+          - not_null
+      - name: dms
+        description: "Durée moyenne de séjour (DMS) hospitalière en jours pour la région et l'année."
+        tests:
+          - not_null
+      - name: nb_sejours_moins_24h
+        description: "Nombre de séjours hospitaliers ambulatoires ou de moins de 24 heures."
+        tests:
+          - not_null
+      - name: nb_sejours_inf_ou_egal_7j
+        description: "Nombre de séjours hospitaliers d'une durée inférieure ou égale à 7 jours (1j à 7j inclus)."
+        tests:
+          - not_null
+      - name: nb_sejours_sup_7j
+        description: "Nombre de séjours hospitaliers d'une durée strictement supérieure à 7 jours (8j et plus)."
+        tests:
+          - not_null
+      - name: nbre_hospitalisation
+        description: "Nombre total d'hospitalisations enregistrées (tous types de séjours confondus)."
+        tests:
+          - not_null
+      - name: ratio_cancer_sein_patho_onco
+        description: "Ratio du nombre d'hospitalisations pour cancer du sein par rapport à l'ensemble des hospitalisations oncologiques de la région."
+        tests:
+          - not_null
+
+  - name: int_depenses_regionales_sein
+    description: "Table intermédiaire estimant les dépenses régionales d'Assurance Maladie pour le cancer du sein par grande catégorie, au prorata des patientes par sous-pathologie (actif vs sous surveillance)."
+    columns:
+      - name: id_depense_regionale
+        description: "Empreinte SHA-256 unique combinant l'année, le code région et le type de dépense."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année des dépenses remboursées (2015-2024)."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel de la région sur 2 caractères."
+        tests:
+          - not_null
+      - name: libelle_region
+        description: "Nom standardisé de la région administrative."
+        tests:
+          - not_null
+      - name: pathologie
+        description: "Pathologie concernée ('Cancer du sein de la femme')."
+        tests:
+          - not_null
+      - name: type_de_depense
+        description: "Grande catégorie de dépense de santé ('Hospitalisations (tous secteurs)', 'Soins de ville', 'Prestations en espèces')."
+        tests:
+          - not_null
+      - name: montant
+        description: "Montant régional estimé des dépenses remboursées en euros, calculé au prorata des effectifs régionaux (cancer actif vs surveillance)."
+        tests:
+          - not_null
+      - name: ratio_cancer_sein_patho_onco
+        description: "Part des dépenses du cancer du sein par rapport à l'ensemble des dépenses oncologiques régionales pour cette catégorie de soins."
+        tests:
+          - not_null
+
