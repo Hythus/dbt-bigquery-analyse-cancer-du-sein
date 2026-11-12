@@ -150,3 +150,91 @@ models:
 
       - name: taux_mortalite_std_moyen_pour_100000
         description: "Taux de mortalité standardisé sur l'âge pour 100 000 femmes. [Unité : décès pour 100 000]"
+
+  - name: int_incidence_age_depistage
+    description: >
+      Table intermédiaire d'analyse de l'incidence du cancer du sein par tranche d'âge et statut de dépistage (1990-2023).
+      Mise au point pour démontrer l'évolution contrastée entre les patientes jeunes de moins de 50 ans (non éligibles au dépistage
+      organisé, dont l'incidence a progressé de plus de 54 % depuis 1990) et les femmes de 50 à 74 ans (tranche cible du dépistage,
+      stabilisée depuis 2004). Intègre les niveaux quinquennaux et macro, les composantes brutes et les indices base 100 pour Power BI.
+    columns:
+      - name: id_incidence_age
+        description: "Clé primaire unique synthétique (hash sha256 de annee, tranche_age et niveau_agregation)."
+        tests:
+          - unique
+          - not_null
+
+      - name: annee
+        description: "Année d'observation de l'incidence de 1990 à 2023. [Unité : année civile]"
+        tests:
+          - not_null
+
+      - name: tranche_age
+        description: "Tranche d'âge quinquennale (ex: '40-44 ans') ou groupe macro de dépistage. [Unité : libellé d'âge]"
+        tests:
+          - not_null
+
+      - name: niveau_agregation
+        description: "Niveau de granularité de la ligne : 'Tranche quinquennale', 'Groupe dépistage' ou 'Total national'."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Tranche quinquennale', 'Groupe dépistage', 'Total national']
+
+      - name: groupe_depistage
+        description: "Classification au regard du programme national de dépistage : 'Moins de 50 ans (hors dépistage)', '50-74 ans (cible dépistage)', '75 ans et plus (post dépistage)' ou 'Total national'."
+        tests:
+          - not_null
+
+      - name: est_cible_depistage_organise
+        description: "Indicateur booléen spécifiant si la tranche fait partie du dépistage organisé officiel (50-74 ans)."
+
+      - name: age_min
+        description: "Borne d'âge inférieure en années révolues. [Unité : années]"
+
+      - name: age_max
+        description: "Borne d'âge supérieure en années révolues (nulle pour 85 ans et plus et total). [Unité : années]"
+
+      - name: ordre_affichage
+        description: "Entier séquentiel de tri chronologique (1 à 18 pour les tranches, 101 à 103 pour les groupes, 200 pour le total) à utiliser comme colonne de tri dans Power BI."
+        tests:
+          - not_null
+
+      - name: nb_nouveaux_cas
+        description: "Nombre annuel de nouveaux cas incidents de cancer du sein diagnostiqués en France. [Unité : cas]"
+
+      - name: nb_personnes_annees
+        description: "Population féminine exposée au risque (effectif en personnes-années). [Unité : personnes-années]"
+
+      - name: total_cas_annee
+        description: "Nombre total de nouveaux cas incidents tous âges confondus pour l'année en France. [Unité : cas]"
+
+      - name: taux_incidence_brut
+        description: "Taux d'incidence brut pour 100 000 femmes (nb_nouveaux_cas * 100 000 / nb_personnes_annees). [Unité : cas pour 100 000 femmes]"
+
+      - name: taux_incidence_ic_inf
+        description: "Borne inférieure de l'intervalle de confiance à 95 % du taux d'incidence brut. [Unité : cas pour 100 000 femmes]"
+
+      - name: taux_incidence_ic_sup
+        description: "Borne supérieure de l'intervalle de confiance à 95 % du taux d'incidence brut. [Unité : cas pour 100 000 femmes]"
+
+      - name: part_cas_annee_pct
+        description: "Part en pourcentage de cette tranche d'âge dans l'ensemble des nouveaux cas de l'année. [Unité : %]"
+
+      - name: indice_base_1990
+        description: "Indice d'évolution de l'incidence normalisé en base 100 sur l'année de départ 1990. [Unité : indice base 100 en 1990]"
+
+      - name: indice_base_2004
+        description: "Indice d'évolution normalisé en base 100 sur 2004 (année de généralisation du dépistage organisé en France). [Unité : indice base 100 en 2004]"
+
+      - name: evolution_pct_depuis_1990
+        description: "Taux de croissance global de l'incidence depuis 1990 ((taux - taux_1990) / taux_1990 * 100). [Unité : %]"
+
+      - name: evolution_pct_depuis_2004
+        description: "Taux de croissance de l'incidence depuis la généralisation du dépistage en 2004 ((taux - taux_2004) / taux_2004 * 100). [Unité : %]"
+
+      - name: evolution_annuelle_pct
+        description: "Variation relative en pourcentage par rapport à l'année immédiatement précédente ((taux_N - taux_N-1) / taux_N-1 * 100). [Unité : %]"
+
+

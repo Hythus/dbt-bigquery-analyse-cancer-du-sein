@@ -102,3 +102,4 @@ select
     )))) as id_mortalite_territoriale,
     *
 from joined
+

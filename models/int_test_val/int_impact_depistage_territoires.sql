@@ -134,3 +134,4 @@ select
     )))) as id_impact_depistage,
     *
 from joined
+
