@@ -228,33 +228,36 @@ Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyse
 
 ---
 
-### 5.3. int_incidence_age_depistage : Dynamique de l\'Incidence et Dépistage Organisé
-* **Problématique traitée** : *L\'incidence du cancer du sein augmente-t-elle chez les patientes de moins de 50 ans non éligibles au dépistage organisé ?*
+### 5.3. `int_incidence_age_depistage` : Dynamique de l'Incidence et Dépistage Organisé
+* **Problématique traitée** : *L'incidence du cancer du sein augmente-t-elle chez les patientes de moins de 50 ans non éligibles au dépistage organisé ?*
+* **Nettoyage appliqué** : Exclusion des tranches d'âge pédiatriques et adolescentes (< 20 ans) présentant une incidence quasi nulle (moins de 0,05 % des cas), afin de focaliser l'analyse sur la population adulte exposée et d'éviter de fausser les dénominateurs.
 * **Constat épidémiologique clé** :
-  * Chez les femmes de **moins de 50 ans (hors dépistage)**, le taux d\'incidence brut a progressé de **38,73** (1990) à **59,91** (2023) pour 100 000 femmes, soit une hausse constante de **+54,7 %** (+10,9 % depuis 2004).
-  * Cette hausse est particulièrement vive chez les femmes de 25-29 ans (+66,7 %) et 30-34 ans (+67,1 %).
-  * Chez les femmes de **50 à 74 ans (cible du dépistage)**, après une montée initiale liée à la mise en place du dépistage (pic à 341,3 en 2004), le taux s\'est stabilisé (332,0 en 2023, soit -2,7 % par rapport à 2004).
-* **Grain & Structure** : 748 observations réparties en 3 niveaux d\'agrégation (
-iveau_agregation) :
-  * Tranche quinquennale : 18 tranches détaillées de 0-4 ans à 85 ans et plus (612 lignes).
-  * Groupe dépistage : 3 groupes macro (< 50 ans, 50-74 ans, 75+ ans, 102 lignes).
-  * Total national : total France entière (34 lignes).
+  * Chez les femmes de **20 à 49 ans (hors dépistage)**, le taux d'incidence brut adulte a progressé de **63,23** (1990) à **98,46** (2023) pour 100 000 femmes, soit une hausse de **+55,7 %** (+14,4 % depuis 2004).
+  * La hausse est particulièrement soutenue chez les jeunes femmes :
+    * 25-29 ans : de 7,5 à 12,5 / 100k (**+66,7 %**)
+    * 30-34 ans : de 25,8 à 43,1 / 100k (**+67,1 %**)
+    * 35-39 ans : de 63,1 à 96,0 / 100k (**+52,1 %**)
+    * 40-44 ans : de 129,2 à 157,1 / 100k (**+21,6 %**)
+    * 45-49 ans : de 198,5 à 259,3 / 100k (**+30,6 %**)
+  * Chez les femmes de **50 à 74 ans (cible du dépistage)**, après un pic en 2004 lié à la mise en place du dépistage (341,3 / 100k), le taux s'est stabilisé (332,0 en 2023, soit -2,7 % par rapport à 2004).
+* **Grain & Structure** : 612 observations (1990-2023) réparties en 3 niveaux d'agrégation (`niveau_agregation`) :
+  * `Tranche quinquennale` : 14 tranches adultes de 20-24 ans à 85 ans et plus (476 lignes).
+  * `Groupe dépistage` : 3 groupes macro (`20-49 ans (hors dépistage)`, `50-74 ans (cible dépistage)`, `75 ans et plus`, 102 lignes).
+  * `Total national` : total France entière 20 ans et plus (34 lignes).
 * **Indicateurs et Composantes DAX** :
-  * 
-b_nouveaux_cas [cas], 
-b_personnes_annees [personnes-années], 	otal_cas_annee [cas].
-  * 	aux_incidence_brut [cas pour 100 000 femmes] avec bornes IC 95 % 	aux_incidence_ic_inf et 	aux_incidence_ic_sup.
-  * part_cas_annee_pct : part de la tranche dans le total national annuel [%].
-  * indice_base_1990 : indice d\'évolution en base 100 en 1990 [indice].
-  * indice_base_2004 : indice d\'évolution en base 100 en 2004 [indice].
-  * evolution_pct_depuis_1990 [%] et evolution_pct_depuis_2004 [%].
-  * ordre_affichage (1 à 18, 101 à 103, 200) pour garantir le tri chronologique natif sur les axes Power BI.
+  * `nb_nouveaux_cas` [cas], `nb_personnes_annees` [personnes-années], `total_cas_annee` [cas].
+  * `taux_incidence_brut` [cas pour 100 000 femmes] avec bornes IC 95 % `taux_incidence_ic_inf` et `taux_incidence_ic_sup`.
+  * `part_cas_annee_pct` : part de la tranche dans le total national annuel [%].
+  * `indice_base_1990` : indice d'évolution en base 100 en 1990 [indice].
+  * `indice_base_2004` : indice d'évolution en base 100 en 2004 [indice].
+  * `evolution_pct_depuis_1990` [%] et `evolution_pct_depuis_2004` [%].
+  * `ordre_affichage` (1 à 14, 101 à 103, 200) pour garantir le tri chronologique natif sur les axes Power BI.
 
 ---
 
 ## 6. Tests de Données et Validation de Qualité
 
-Le projet intègre **196 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=188 WARN=0 ERROR=0`) :
+Le projet intègre **196 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=196 WARN=0 ERROR=0`) :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).

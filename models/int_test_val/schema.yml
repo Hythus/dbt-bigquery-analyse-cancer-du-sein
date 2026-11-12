@@ -154,9 +154,10 @@ models:
   - name: int_incidence_age_depistage
     description: >
       Table intermédiaire d'analyse de l'incidence du cancer du sein par tranche d'âge et statut de dépistage (1990-2023).
-      Mise au point pour démontrer l'évolution contrastée entre les patientes jeunes de moins de 50 ans (non éligibles au dépistage
-      organisé, dont l'incidence a progressé de plus de 54 % depuis 1990) et les femmes de 50 à 74 ans (tranche cible du dépistage,
-      stabilisée depuis 2004). Intègre les niveaux quinquennaux et macro, les composantes brutes et les indices base 100 pour Power BI.
+      Filtrée dès 20 ans (exclusion des tranches < 20 ans à incidence quasi nulle). Mise au point pour démontrer l'évolution
+      contrastée entre les patientes jeunes de 20 à 49 ans (non éligibles au dépistage organisé, dont l'incidence adulte a progressé
+      de +55,7 % depuis 1990) et les femmes de 50 à 74 ans (tranche cible du dépistage, stabilisée depuis 2004). Intègre les niveaux
+      quinquennaux et macro, les composantes brutes et les indices base 100 pour Power BI.
     columns:
       - name: id_incidence_age
         description: "Clé primaire unique synthétique (hash sha256 de annee, tranche_age et niveau_agregation)."
@@ -183,7 +184,7 @@ models:
                 values: ['Tranche quinquennale', 'Groupe dépistage', 'Total national']
 
       - name: groupe_depistage
-        description: "Classification au regard du programme national de dépistage : 'Moins de 50 ans (hors dépistage)', '50-74 ans (cible dépistage)', '75 ans et plus (post dépistage)' ou 'Total national'."
+        description: "Classification au regard du programme national de dépistage : '20-49 ans (hors dépistage)', '50-74 ans (cible dépistage)', '75 ans et plus (post dépistage)' ou 'Total national'."
         tests:
           - not_null
 
@@ -191,13 +192,13 @@ models:
         description: "Indicateur booléen spécifiant si la tranche fait partie du dépistage organisé officiel (50-74 ans)."
 
       - name: age_min
-        description: "Borne d'âge inférieure en années révolues. [Unité : années]"
+        description: "Borne d'âge inférieure en années révolues (>= 20 ans). [Unité : années]"
 
       - name: age_max
         description: "Borne d'âge supérieure en années révolues (nulle pour 85 ans et plus et total). [Unité : années]"
 
       - name: ordre_affichage
-        description: "Entier séquentiel de tri chronologique (1 à 18 pour les tranches, 101 à 103 pour les groupes, 200 pour le total) à utiliser comme colonne de tri dans Power BI."
+        description: "Entier séquentiel de tri chronologique (1 à 14 pour les tranches 20-24 à 85+, 101 à 103 pour les groupes, 200 pour le total) à utiliser comme colonne de tri dans Power BI."
         tests:
           - not_null
 

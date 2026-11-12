@@ -5,7 +5,7 @@ with detail as (
         tranche_age,
         'Tranche quinquennale' as niveau_agregation,
         case
-            when age_max < 50 then 'Moins de 50 ans (hors dépistage)'
+            when age_max < 50 then '20-49 ans (hors dépistage)'
             when age_min >= 50 and age_max <= 74 then '50-74 ans (cible dépistage)'
             else '75 ans et plus (post dépistage)'
         end as groupe_depistage,
@@ -13,24 +13,20 @@ with detail as (
         age_min,
         age_max,
         case tranche_age
-            when '00-04 ans' then 1
-            when '05-09 ans' then 2
-            when '10-14 ans' then 3
-            when '15-19 ans' then 4
-            when '20-24 ans' then 5
-            when '25-29 ans' then 6
-            when '30-34 ans' then 7
-            when '35-39 ans' then 8
-            when '40-44 ans' then 9
-            when '45-49 ans' then 10
-            when '50-54 ans' then 11
-            when '55-59 ans' then 12
-            when '60-64 ans' then 13
-            when '65-69 ans' then 14
-            when '70-74 ans' then 15
-            when '75-79 ans' then 16
-            when '80-84 ans' then 17
-            when '85 ans et plus' then 18
+            when '20-24 ans' then 1
+            when '25-29 ans' then 2
+            when '30-34 ans' then 3
+            when '35-39 ans' then 4
+            when '40-44 ans' then 5
+            when '45-49 ans' then 6
+            when '50-54 ans' then 7
+            when '55-59 ans' then 8
+            when '60-64 ans' then 9
+            when '65-69 ans' then 10
+            when '70-74 ans' then 11
+            when '75-79 ans' then 12
+            when '80-84 ans' then 13
+            when '85 ans et plus' then 14
         end as ordre_affichage,
         nb_nouveaux_cas,
         nb_personnes_annees,
@@ -38,6 +34,8 @@ with detail as (
         round(taux_incidence_brut_ic_inf, 2) as taux_incidence_ic_inf,
         round(taux_incidence_brut_ic_sup, 2) as taux_incidence_ic_sup
     from {{ ref('stg_incidence_france_age') }}
+    -- Nettoyage métier : exclusion des tranches < 20 ans (incidence quasi nulle représentant moins de 0.05% des cas)
+    where age_min >= 20
 
 ),
 
@@ -52,7 +50,7 @@ macro as (
         min(age_min) as age_min,
         max(age_max) as age_max,
         case groupe_depistage
-            when 'Moins de 50 ans (hors dépistage)' then 101
+            when '20-49 ans (hors dépistage)' then 101
             when '50-74 ans (cible dépistage)' then 102
             when '75 ans et plus (post dépistage)' then 103
         end as ordre_affichage,
@@ -70,11 +68,11 @@ national as (
 
     select
         annee,
-        'Ensemble des âges' as tranche_age,
+        'Ensemble des 20 ans et plus' as tranche_age,
         'Total national' as niveau_agregation,
         'Total national' as groupe_depistage,
         false as est_cible_depistage_organise,
-        0 as age_min,
+        20 as age_min,
         cast(null as int64) as age_max,
         200 as ordre_affichage,
         sum(nb_nouveaux_cas) as nb_nouveaux_cas,
@@ -145,7 +143,7 @@ final as (
         age_max,
         ordre_affichage,
 
-        -- Composantes brutes
+        -- Composantes brutes (femmes >= 20 ans)
         cast(nb_nouveaux_cas as int64) as nb_nouveaux_cas,
         round(nb_personnes_annees, 1) as nb_personnes_annees,
         cast(total_cas_annee as int64) as total_cas_annee,
