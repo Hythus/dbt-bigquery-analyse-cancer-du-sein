@@ -18,8 +18,12 @@ Le projet adopte les principes de l'**Analytics Engineering** en séparant rigou
                          │
                          ▼
  [ Intermediate Layer (Tables) : int_projet_cancer ]
-   • int_charge_hospitaliere_sein (Charge hospit, DMS, ratios séjours)
-   • int_depenses_regionales_sein (Ventilation prorata patientes par sous-pathologie)
+   • int_charge_hospitaliere_sein (Activité, DMS, composantes DAX)
+   • int_depenses_regionales_sein (Prorata patientes, coût moyen)
+                         │
+                         ▼
+   [ Marts Layer (Tables) : mart_projet_cancer ]
+   • dim_regions (Dimension partagée 18 régions pour Power BI)
 ```
 
 ### Configuration des Datasets BigQuery
@@ -28,6 +32,7 @@ Grâce à la macro personnalisée [`macros/generate_schema_name.sql`](macros/gen
 
 * **Couche Staging** : dataset `stg_projet_cancer` (matérialisation : `view`).
 * **Couche Intermediate** : dataset `int_projet_cancer` (matérialisation : `table`).
+* **Couche Marts** : dataset `mart_projet_cancer` (matérialisation : `table`).
 * **Persistance des métadonnées (`persist_docs`)** : activée dans `dbt_project.yml` (`relation: true`, `columns: true`), ce qui injecte automatiquement les descriptions de chaque colonne directement dans le dictionnaire de données et l'interface de BigQuery.
 
 ---
@@ -148,26 +153,59 @@ Les données financières brutes de l'Assurance Maladie (`stg_depenses_onco`) ne
 
 ---
 
-## 4. Tests de Données et Validation de Qualité
+## 4. Couche Marts (`models/marts/`) - Modèle en Étoile Power BI
 
-Le projet intègre **152 tests dbt** exécutés lors de chaque build :
+La couche marts expose les dimensions conformes destinées à structurer le modèle relationnel dans Power BI sans créer de relations Many-to-Many.
 
-* **Unicité (`unique`)** : vérifiée sur toutes les clés synthétiques SHA-256 (`id_charge_hospitaliere`, `id_depense_regionale`, `id_pop_region_age`, etc.).
-* **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).
-* **Conformité des domaines (`accepted_values`)** :
-  * Codes sexe : `['E', 'F', 'H']` / Libellés : `['Ensemble', 'Femmes', 'Hommes']`.
-  * Types de zones : `['National', 'Région', 'Département']`.
-  * Catégories de dépenses et tranches d'âge.
+### 4.1. `dim_regions` : Dimension Partagée des Régions
 
-### Résultat du dernier build complet :
-```text
-Finished running 22 view models, 2 table models, 140 data tests in 1m 24s.
-Completed successfully: PASS=164 WARN=0 ERROR=0 TOTAL=164
+Ce modèle référence les **18 régions administratives françaises** (13 régions métropolitaines et 5 DROM) et sert d'axe d'analyse unique pour les tables de faits hospitalières et financières :
+
+* **Clé primaire** : `code_region` (code Insee sur 2 caractères : `'01'`, `'11'`, `'84'`, etc.) et `id_region` (hachage SHA-256).
+* **Attributs géographiques** :
+  * `libelle_region` : nom officiel harmonisé de la région.
+  * `zone_geographique` : `'Hexagone'` ou `'Outre-mer'`.
+  * `est_metropole` : booléen (`TRUE`/`FALSE`) permettant de filtrer instantanément la métropole dans Power BI.
+  * `code_iso_region` : code normalisé ISO 3166-2:FR (`'FR-IDF'`, `'FR-ARA'`, `'FR-PAC'`, etc.) reconnu nativement par les cartes choroplèthes et visuels Azure Maps / Shape Map dans Power BI.
+  * `chef_lieu_region` : préfecture de région / chef-lieu administratif.
+
+### 4.2. Schéma en Étoile dans Power BI
+
 ```
+                    ┌─────────────────────────┐
+                    │       dim_regions       │
+                    │   (mart_projet_cancer)  │
+                    │  code_region (PK / 1:N) │
+                    └────────────┬────────────┘
+                                 │
+         ┌───────────────────────┴───────────────────────┐
+         │                                               │
+         ▼                                               ▼
+┌─────────────────────────────────┐   ┌─────────────────────────────────┐
+│   int_charge_hospitaliere_sein  │   │  int_depenses_regionales_sein   │
+│       (int_projet_cancer)       │   │       (int_projet_cancer)       │
+│  code_region (FK), annee, ...   │   │ code_region (FK), annee, type.. │
+└─────────────────────────────────┘   └─────────────────────────────────┘
+```
+*(Note : la dimension calendrier `dim_calendrier` sera générée directement via Power Query / DAX dans Power BI).*
 
 ---
 
-## 5. Guide d'Exécution
+## 5. Tests de Données et Validation de Qualité
+
+Le projet intègre **164 tests dbt** exécutés lors de chaque build :
+
+* **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, etc.).
+* **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).
+* **Conformité des domaines (`accepted_values`)** :
+  * Codes sexe : `['E', 'F', 'H']` / Libellés : `['Ensemble', 'Femmes', 'Hommes']`.
+  * Zones géographiques : `['Hexagone', 'Outre-mer']`.
+  * Types de zones : `['National', 'Région', 'Département']`.
+  * Catégories de dépenses et tranches d'âge.
+
+---
+
+## 6. Guide d'Exécution
 
 ### Activer l'environnement virtuel
 ```powershell

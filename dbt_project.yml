@@ -39,6 +39,9 @@ models:
     intermediate:
       +materialized: table
       +schema: int_projet_cancer
+    marts:
+      +materialized: table
+      +schema: mart_projet_cancer
     # Config indicated by + and applies to all files under models/example/
     example:
       +materialized: view

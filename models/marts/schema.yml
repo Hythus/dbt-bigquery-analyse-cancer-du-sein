@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: dim_regions
+    description: "Dimension partagée des régions françaises (18 régions administratives : 13 métropolitaines et 5 DROM) pour le schéma en étoile du modèle Power BI."
+    columns:
+      - name: id_region
+        description: "Empreinte SHA-256 unique de la région."
+        tests:
+          - unique
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères de la région (clé primaire de la dimension et clé de jointure avec les tables de faits) [Unité : Code Insee]."
+        tests:
+          - unique
+          - not_null
+      - name: libelle_region
+        description: "Nom officiel standardisé de la région administrative."
+        tests:
+          - unique
+          - not_null
+      - name: zone_geographique
+        description: "Zone géographique Insee ('Hexagone' ou 'Outre-mer')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Hexagone', 'Outre-mer']
+      - name: est_metropole
+        description: "Indicateur booléen permettant de filtrer instantanément la France métropolitaine dans Power BI (TRUE si Hexagone, FALSE si Outre-mer)."
+        tests:
+          - not_null
+      - name: code_iso_region
+        description: "Code normalisé ISO 3166-2:FR de la région (reconnu nativement par les cartes choroplèthes et visuels Azure Maps / Shape Map dans Power BI)."
+        tests:
+          - unique
+          - not_null
+      - name: chef_lieu_region
+        description: "Préfecture de région / chef-lieu administratif."
+        tests:
+          - not_null
