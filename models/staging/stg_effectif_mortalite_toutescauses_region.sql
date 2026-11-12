@@ -38,3 +38,4 @@ select
     )))) as id_effectif_mortalite_toutescauses,
     *
 from cleaned
+

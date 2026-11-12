@@ -39,6 +39,9 @@ models:
     intermediate:
       +materialized: table
       +schema: int_projet_cancer
+    int_test_val:
+      +materialized: table
+      +schema: Int_test_val
     marts:
       +materialized: table
       +schema: mart_projet_cancer

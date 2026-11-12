@@ -32,6 +32,7 @@ Grâce à la macro personnalisée [`macros/generate_schema_name.sql`](macros/gen
 
 * **Couche Staging** : dataset `stg_projet_cancer` (matérialisation : `view`).
 * **Couche Intermediate** : dataset `int_projet_cancer` (matérialisation : `table`).
+* **Couche Intermediate R&D / Test** : dataset `Int_test_val` (matérialisation : `table`).
 * **Couche Marts** : dataset `mart_projet_cancer` (matérialisation : `table`).
 * **Persistance des métadonnées (`persist_docs`)** : activée dans `dbt_project.yml` (`relation: true`, `columns: true`), ce qui injecte automatiquement les descriptions de chaque colonne directement dans le dictionnaire de données et l'interface de BigQuery.
 
@@ -193,11 +194,45 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 
 ---
 
-## 5. Tests de Données et Validation de Qualité
+## 5. Couche Expérimentation & R&D (`models/int_test_val/`) - Dataset `Int_test_val`
 
-Le projet intègre **182 tests dbt** exécutés lors de chaque build :
+Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyses transversales sans interférer avec les tables de production partagées par l'équipe. Il est matérialisé sous la forme de tables BigQuery dans le dataset distinct **`Int_test_val`**.
 
-* **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, etc.).
+### 5.1. `int_mortalite_territoriale_sein` : Analyse Territoriale de la Mortalité
+* **Problématique traitée** : *La mortalité par cancer du sein est-elle la même selon les territoires ?*
+* **Grain** : `(annee, code_region)` (2014-2024, 198 observations : 18 régions $\times$ 11 années).
+* **Tables croisées** :
+  * `stg_effectif_mortalite_region` (décès par cancer du sein chez la femme, tranches décennales).
+  * `stg_effectif_mortalite_toutescauses_region` (décès féminins toutes causes).
+  * `stg_mortalite_region` (taux standardisés sur l'âge et décès par grandes tranches <65, 65-84, 85+).
+  * `stg_pop_cible_regions` (population totale et cible 50-74 ans).
+* **Indicateurs et composantes brutes DAX** :
+  * `nb_deces_sein` [décès], `nb_deces_toutes_causes_femmes` [décès], `population_femmes_total` [habitantes].
+  * `part_cancer_sein_mortalite_totale` = $\frac{\text{nb\_deces\_sein}}{\text{nb\_deces\_toutes\_causes\_femmes}}$ (poids du cancer du sein dans la mortalité féminine).
+  * `taux_brut_mortalite_pour_100k_femmes` [décès pour 100 000].
+  * `taux_std_moins_65_pour_100000`, `taux_std_65_84_pour_100000`, `taux_std_85_plus_pour_100000` et moyenne standardisée.
+
+### 5.2. `int_impact_depistage_territoires` : Évaluation Dépistage, Activité et Mortalité
+* **Problématique traitée** : *Le dépistage organisé a-t-il un impact mesurable sur la précocité des diagnostics, la lourdeur des soins et la mortalité ?*
+* **Grain** : `(annee, code_region)` (2016-2024, 162 observations : 18 régions $\times$ 9 années).
+* **Tables croisées** :
+  * `stg_depistage_taux_standardise_2016_2025` (taux de participation départementaux agrégés à la région).
+  * `stg_depistage_indicateurs_cancers_regions` (cancers détectés `NC01`, in situ `NC04`, petites tumeurs $\le 10$ mm `NC08`, taux de détection pour 1 000 `TC01`).
+  * `int_charge_hospitaliere_sein` (DMS en jours, part des séjours courts $\le 7$j, part ambulatoire < 24h, effectifs de patientes).
+  * `stg_mortalite_region` (mortalité standardisée et volume de décès).
+* **Indicateurs d'impact** :
+  * Participation : `taux_participation_depistage_std_pct` [%].
+  * Précocité diagnostique : `part_cancers_inf_ou_egal_10mm_pct` [%], `part_cancers_in_situ_pct` [%].
+  * Virage ambulatoire & durée de soins : `dms_jours` [jours], `part_sejours_courts_pct` [%], `part_sejours_ambulatoires_pct` [%].
+  * Corrélation mortalité : `taux_mortalite_std_moyen_pour_100000` [pour 100 000].
+
+---
+
+## 6. Tests de Données et Validation de Qualité
+
+Le projet intègre **188 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=188 WARN=0 ERROR=0`) :
+
+* **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).
 * **Conformité des domaines (`accepted_values`)** :
   * Codes sexe : `['E', 'F', 'H']` / Libellés : `['Ensemble', 'Femmes', 'Hommes']`.
@@ -207,7 +242,7 @@ Le projet intègre **182 tests dbt** exécutés lors de chaque build :
 
 ---
 
-## 6. Guide d'Exécution
+## 7. Guide d'Exécution
 
 ### Activer l'environnement virtuel
 ```powershell
