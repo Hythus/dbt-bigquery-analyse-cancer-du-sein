@@ -10,11 +10,11 @@ models:
           - unique
           - not_null
       - name: annee
-        description: "Année d'activité hospitalière (2018-2024)."
+        description: "Année d'activité hospitalière (2018-2024) [Unité : Année (AAAA)]."
         tests:
           - not_null
       - name: code_region
-        description: "Code officiel de la région sur 2 caractères."
+        description: "Code officiel Insee de la région sur 2 caractères [Unité : Code textuel]."
         tests:
           - not_null
       - name: libelle_region
@@ -25,28 +25,28 @@ models:
         description: "Libellé de la pathologie oncologique ciblée ('Tumeur maligne du sein')."
         tests:
           - not_null
-      - name: dms
-        description: "Durée moyenne de séjour (DMS) hospitalière en jours pour la région et l'année."
+      - name: dms_jours
+        description: "Durée moyenne de séjour (DMS) hospitalière [Unité : Jours]."
         tests:
           - not_null
       - name: nb_sejours_moins_24h
-        description: "Nombre de séjours hospitaliers ambulatoires ou de moins de 24 heures."
+        description: "Nombre de séjours hospitaliers ambulatoires ou de moins de 24 heures [Unité : Nombre de séjours]."
         tests:
           - not_null
       - name: nb_sejours_inf_ou_egal_7j
-        description: "Nombre de séjours hospitaliers d'une durée inférieure ou égale à 7 jours (1j à 7j inclus)."
+        description: "Nombre de séjours hospitaliers d'une durée inférieure ou égale à 7 jours (1j à 7j inclus) [Unité : Nombre de séjours]."
         tests:
           - not_null
       - name: nb_sejours_sup_7j
-        description: "Nombre de séjours hospitaliers d'une durée strictement supérieure à 7 jours (8j et plus)."
+        description: "Nombre de séjours hospitaliers d'une durée strictement supérieure à 7 jours (8j et plus) [Unité : Nombre de séjours]."
         tests:
           - not_null
       - name: nbre_hospitalisation
-        description: "Nombre total d'hospitalisations enregistrées (tous types de séjours confondus)."
+        description: "Nombre total d'hospitalisations enregistrées, tous types de séjours confondus [Unité : Nombre d'hospitalisations]."
         tests:
           - not_null
       - name: ratio_cancer_sein_patho_onco
-        description: "Ratio du nombre d'hospitalisations pour cancer du sein par rapport à l'ensemble des hospitalisations oncologiques de la région."
+        description: "Ratio du nombre d'hospitalisations pour cancer du sein par rapport à l'ensemble des hospitalisations oncologiques de la région [Unité : Ratio / Proportion entre 0 et 1 (sans unité)]."
         tests:
           - not_null
 
@@ -59,11 +59,11 @@ models:
           - unique
           - not_null
       - name: annee
-        description: "Année des dépenses remboursées (2015-2024)."
+        description: "Année des dépenses remboursées (2015-2024) [Unité : Année (AAAA)]."
         tests:
           - not_null
       - name: code_region
-        description: "Code officiel de la région sur 2 caractères."
+        description: "Code officiel Insee de la région sur 2 caractères [Unité : Code textuel]."
         tests:
           - not_null
       - name: libelle_region
@@ -78,12 +78,11 @@ models:
         description: "Grande catégorie de dépense de santé ('Hospitalisations (tous secteurs)', 'Soins de ville', 'Prestations en espèces')."
         tests:
           - not_null
-      - name: montant
-        description: "Montant régional estimé des dépenses remboursées en euros, calculé au prorata des effectifs régionaux (cancer actif vs surveillance)."
+      - name: montant_euros
+        description: "Montant régional estimé des dépenses remboursées, calculé au prorata des effectifs régionaux (cancer actif vs surveillance) [Unité : Euros (€)]."
         tests:
           - not_null
       - name: ratio_cancer_sein_patho_onco
-        description: "Part des dépenses du cancer du sein par rapport à l'ensemble des dépenses oncologiques régionales pour cette catégorie de soins."
+        description: "Part des dépenses du cancer du sein par rapport à l'ensemble des dépenses oncologiques régionales pour cette catégorie de soins [Unité : Ratio / Proportion entre 0 et 1 (sans unité)]."
         tests:
           - not_null
-

@@ -56,7 +56,7 @@ joined as (
         r.code_region,
         c.nom_region as libelle_region,
         c.libelle_pathologie as pathologie,
-        round(cast(d.dms as float64), 2) as dms,
+        round(cast(d.dms as float64), 2) as dms_jours,
         cast(c.nb_sejours_moins_24h as int64) as nb_sejours_moins_24h,
         cast(c.nb_sejours_inf_ou_egal_7j as int64) as nb_sejours_inf_ou_egal_7j,
         cast(c.nb_sejours_sup_7j as int64) as nb_sejours_sup_7j,

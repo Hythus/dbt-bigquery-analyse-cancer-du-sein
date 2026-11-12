@@ -104,7 +104,7 @@ Ce modèle regroupe la charge de soins et la durée de séjour pour le cancer du
   * `nb_sejours_sup_7j` : séjours longs cumulés strictement supérieurs à 7 jours :
     $$\text{Séjours} > 7\text{j} = \text{nb\_sejours\_8j} + \text{nb\_sejours\_9j} + \text{nb\_sejours\_10\_19j} + \text{nb\_sejours\_20\_29j} + \text{nb\_sejours\_30j\_plus}$$
 * **Volumétrie totale** : `nbre_hospitalisation` reprend le nombre total de séjours (`nb_sejours_total`).
-* **Durée Moyenne de Séjour (`dms`)** : jointure avec `stg_dms_region` et arrondi à 2 décimales.
+* **Durée Moyenne de Séjour (`dms_jours`)** : jointure avec `stg_dms_region` et arrondi à 2 décimales (unité : jours).
 * **Ratio d'impact oncologique régional** :
   $$\text{ratio\_cancer\_sein\_patho\_onco} = \frac{\text{Hospitalisations tumeur maligne du sein}}{\sum \text{Hospitalisations de toutes les tumeurs (région, même année)}}$$
 
@@ -126,8 +126,8 @@ Les données financières brutes de l'Assurance Maladie (`stg_depenses_onco`) ne
        $$\text{Prorata}_{\text{Actif}} = \frac{\text{Patientes régionales } (\text{CAN\_SEI\_ACT})}{\text{Total officiel France } (\text{Actif})}$$
      * **Phase sous surveillance** :
        $$\text{Prorata}_{\text{Surveillance}} = \frac{\text{Patientes régionales } (\text{CAN\_SEI\_SUR})}{\text{Total officiel France } (\text{Surveillance})}$$
-3. **Calcul du montant régionalisé** :
-   $$\text{Montant Régional} = \sum_{\text{statut}} \left( \text{Montant National}_{\text{statut, catégorie}} \times \text{Prorata}_{\text{statut}} \right)$$
+3. **Calcul du montant régionalisé (`montant_euros`)** :
+   $$\text{Montant Régional (euros)} = \sum_{\text{statut}} \left( \text{Montant National}_{\text{statut, catégorie}} \times \text{Prorata}_{\text{statut}} \right)$$
 4. **Agrégation par Grande Catégorie** :
    * Les postes fins sont regroupés sous les 3 catégories officielles :
      * `Hospitalisations (tous secteurs)`

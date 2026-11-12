@@ -91,7 +91,7 @@ joined as (
         s.nom_region as libelle_region,
         s.localisation_cancer as pathologie,
         s.categorie_depense as type_de_depense,
-        s.montant_regional_euros as montant,
+        s.montant_regional_euros as montant_euros,
         round(safe_divide(s.montant_regional_euros, t.montant_total_onco_regional), 4) as ratio_cancer_sein_patho_onco
 
     from aggr_par_patho s
