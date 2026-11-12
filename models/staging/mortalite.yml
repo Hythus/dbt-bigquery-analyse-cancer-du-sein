@@ -10,6 +10,8 @@ sources:
         description: "Décès et taux standardisés par année, région, sexe et classe d'âge."
       - name: effectif_mortalite_region
         description: "Effectifs annuels de décès par région de domicile, tranche d'âge de 10 ans et cause médicale."
+      - name: effectif_mortalite_toutescauses_region
+        description: "Effectifs annuels de décès toutes causes confondues par région de domicile, tranche d'âge de 10 ans et sexe."
 
 models:
   - name: stg_mortalite_region
@@ -103,3 +105,45 @@ models:
         description: "Nombre de décès dénombrés pour cette catégorie."
         tests:
           - not_null
+
+  - name: stg_effectif_mortalite_toutescauses_region
+    description: "Effectifs annuels de décès toutes causes confondues par région de domicile, tranche d'âge de 10 ans et sexe (Insee / CépiDc 2014-2024)."
+    columns:
+      - name: id_effectif_mortalite_toutescauses
+        description: "Empreinte SHA-256 de la clé unique (annee_deces, code_region, tranche_age_10, sexe, cause_initiale_deces, indicateur)."
+        tests:
+          - unique
+          - not_null
+      - name: annee_deces
+        description: "Année de survenue du décès (2014-2024) [Unité : Année (AAAA)]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code région officiel de domicile sur 2 caractères [Unité : Code Insee]."
+        tests:
+          - not_null
+      - name: nom_region
+        description: "Nom standardisé de la région de domicile."
+        tests:
+          - not_null
+      - name: tranche_age_10
+        description: "Classe d'âge par tranche de 10 ans (ex. '< 1', '1 - 4', '5 - 14', ..., '85 - 94', '95 +')."
+        tests:
+          - not_null
+      - name: sexe
+        description: "Sexe des défunts ('Femmes', 'Hommes', 'Tous sexes')."
+        tests:
+          - not_null
+      - name: cause_initiale_deces
+        description: "Libellé de la cause ('Toutes causes')."
+        tests:
+          - not_null
+      - name: indicateur
+        description: "Nom de l'indicateur épidémiologique ('Effectifs de décès')."
+        tests:
+          - not_null
+      - name: nb_deces
+        description: "Nombre total de décès toutes causes dénombrés [Unité : Nombre de décès]."
+        tests:
+          - not_null
+

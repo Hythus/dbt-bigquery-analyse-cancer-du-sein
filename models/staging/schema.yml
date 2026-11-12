@@ -52,6 +52,36 @@ sources:
         description: "Taux de participation brut par période biennale et tranche d'âge (2005 à 2025)."
       - name: Taux_Standadise_Depistage_Dep_Region_2016_2025
         description: "Taux standardisé de participation au dépistage par département et région (2016-2025)."
+      - name: indicateurs_evolution_AuRA_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Auvergne-Rhône-Alpes (2008-2020)."
+      - name: indicateurs_evolution_BFC_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Bourgogne-Franche-Comté (2008-2020)."
+      - name: indicateurs_evolution_Bretagne_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Bretagne (2008-2020)."
+      - name: indicateurs_evolution_CVdL_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Centre-Val de Loire (2008-2020)."
+      - name: indicateurs_evolution_GE_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Grand Est (2008-2020)."
+      - name: indicateurs_evolution_Guadeloupe_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Guadeloupe (2008-2020)."
+      - name: indicateurs_evolution_Guyane_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Guyane (2008-2020)."
+      - name: indicateurs_evolution_HdF_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Hauts-de-France (2008-2020)."
+      - name: indicateurs_evolution_IdF_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Île-de-France (2008-2020)."
+      - name: indicateurs_evolution_Martinique_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Martinique (2008-2020)."
+      - name: indicateurs_evolution_Normandie_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Normandie (2008-2020)."
+      - name: indicateurs_evolution_Occitanie_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Occitanie (2008-2020)."
+      - name: indicateurs_evolution_PACA_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour PACA (2008-2020)."
+      - name: indicateurs_evolution_PdL_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour Pays de la Loire (2008-2020)."
+      - name: indicateurs_evolution_Reunion_2008-2020_Cancers
+        description: "Indicateurs d'évaluation et de détection du dépistage pour La Réunion (2008-2020)."
 
 models:
   - name: stg_charge_france
@@ -828,5 +858,44 @@ models:
         description: "Effectif de population Insee pour la tranche d'âge et le sexe."
         tests:
           - not_null
-      - name: is_resultat_precoce
-        description: "Indicateur booléen spécifiant si l'estimation Insee est précoce/provisoire."
+
+  - name: stg_depistage_indicateurs_cancers_regions
+    description: "Indicateurs d'évaluation et de détection du dépistage organisé du cancer du sein consolidés pour 15 régions (2008-2020) : cancers in situ, invasifs, taille <= 10mm, taux pour 1000 femmes et VPP."
+    columns:
+      - name: id_indicateur_depistage
+        description: "Empreinte SHA-256 unique combinant annee, code_region, code_indicateur et tranche_age."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année de l'indicateur de dépistage (2008-2020) [Unité : Année (AAAA)]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee de la région sur 2 caractères [Unité : Code Insee]."
+        tests:
+          - not_null
+      - name: nom_region
+        description: "Nom standardisé de la région administrative."
+        tests:
+          - not_null
+      - name: code_indicateur
+        description: "Code normalisé de l'indicateur (ex. 'NC01', 'NC02', 'NC04', 'NC06', 'NC08', 'TC01', 'PC04', 'VPP01')."
+        tests:
+          - not_null
+      - name: libelle_indicateur
+        description: "Libellé de l'indicateur épidémiologique de dépistage."
+        tests:
+          - not_null
+      - name: tranche_age
+        description: "Tranche d'âge ciblée ('50-54 ans', '55-59 ans', '60-64 ans', '65-69 ans', '70-74 ans', '50-74 ans')."
+        tests:
+          - not_null
+      - name: taux_ou_valeur_initial_sans_ant_mammo
+        description: "Valeur ou taux pour le premier dépistage chez une femme sans antécédent de mammographie."
+      - name: taux_ou_valeur_initial_avec_ant_mammo
+        description: "Valeur ou taux pour le premier dépistage chez une femme avec antécédent de mammographie."
+      - name: taux_ou_valeur_subsequents
+        description: "Valeur ou taux pour les dépistages de suivi (subséquents)."
+      - name: taux_ou_valeur_tous_rangs
+        description: "Valeur ou taux pour l'ensemble des dépistages tous rangs confondus."

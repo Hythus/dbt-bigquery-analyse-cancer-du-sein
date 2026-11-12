@@ -37,7 +37,7 @@ Grâce à la macro personnalisée [`macros/generate_schema_name.sql`](macros/gen
 
 ---
 
-## 2. Couche Staging (`models/staging/`) - 22 Modèles
+## 2. Couche Staging (`models/staging/`) - 24 Modèles
 
 La couche staging isole les tables brutes, applique un renommage métier homogène (snake_case) et garantit la qualité par typage strict et clés primaires synthétiques.
 
@@ -89,6 +89,8 @@ La couche staging isole les tables brutes, applique un renommage métier homogè
 | `depistage` | `stg_depistage_taux_standardise_2016_2025` | Taux standardisés Insee par département et région. |
 | `mortalite` | `stg_mortalite_region` | Taux standardisés de mortalité régionale par classe d'âge. |
 | `mortalite` | `stg_effectif_mortalite_region` | Dénombrement annuel des décès par région, âge (10 ans) et cause. |
+| `mortalite` | `stg_effectif_mortalite_toutescauses_region` | Dénombrement annuel des décès toutes causes par région, âge (10 ans) et sexe (2014-2024). |
+| `depistage` | `stg_depistage_indicateurs_cancers_regions` | Indicateurs d'évaluation et détection de dépistage unifiés pour 15 régions (2008-2020). |
 
 ---
 
@@ -193,7 +195,7 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 
 ## 5. Tests de Données et Validation de Qualité
 
-Le projet intègre **164 tests dbt** exécutés lors de chaque build :
+Le projet intègre **182 tests dbt** exécutés lors de chaque build :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).
