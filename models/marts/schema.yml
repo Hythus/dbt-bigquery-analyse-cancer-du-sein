@@ -39,3 +39,130 @@ models:
         description: "Préfecture de région / chef-lieu administratif."
         tests:
           - not_null
+
+  - name: mart_depistage_centres_region
+    description: >
+      Table de faits régionale prête pour Power BI sur la période 2014-2022 : croise l'offre de centres de radiologie,
+      la participation standardisée au dépistage organisé, la population cible 50-74 ans et la densité de population.
+      Hypothèse méthodologique : les dates d'ouverture des centres de dépistage ne sont pas disponibles dans la source ;
+      on part du principe qu'ils existent depuis au moins 2014 sans pouvoir le confirmer.
+      À relier à dim_regions via code_region (relation 1:N).
+    columns:
+      - name: id_mart_depistage_region
+        description: "Clé primaire SHA-256 unique par couple (annee, code_region)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année d'observation (2014 à 2022) [Unité : Année]."
+        tests:
+          - not_null
+      - name: est_derniere_annee
+        description: "Booléen TRUE pour 2022 afin de filtrer par défaut dans Power BI et éviter de sommer nb_centres_region sur plusieurs années."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code Insee sur 2 caractères de la région (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: nom_region
+        description: "Nom officiel de la région."
+        tests:
+          - not_null
+      - name: nb_centres_region
+        description: "Nombre de centres de radiologie recensés dans la région (supposés actifs depuis au moins 2014) [Unité : Centres]."
+        tests:
+          - not_null
+      - name: population_regionale
+        description: "Population totale estimée de la région pour l'année [Unité : Habitants]."
+        tests:
+          - not_null
+      - name: superficie_region_km2
+        description: "Superficie officielle INSEE/IGN de la région [Unité : km²]."
+        tests:
+          - not_null
+      - name: densite_population_hab_km2
+        description: "Densité de population régionale [Unité : hab/km²]."
+        tests:
+          - not_null
+      - name: femmes_total
+        description: "Population féminine totale de la région [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: femmes_50_74
+        description: "Population féminine cible âgée de 50 à 74 ans [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: taux_participation_std_pct
+        description: "Taux standardisé de participation au dépistage organisé du cancer du sein [Unité : %]."
+        tests:
+          - not_null
+      - name: nb_femmes_participantes_estime
+        description: "Nombre estimé de femmes de 50-74 ans ayant participé au dépistage [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: nb_femmes_non_participantes_estime
+        description: "Nombre estimé de femmes de 50-74 ans n'ayant pas participé au dépistage [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: nb_femmes_50_74_par_centre
+        description: "Nombre moyen de femmes cibles (50-74 ans) par centre de radiologie [Unité : Femmes / centre]."
+        tests:
+          - not_null
+      - name: nb_centres_pour_100k_femmes_50_74
+        description: "Densité de centres pour 100 000 femmes cibles (50-74 ans) [Unité : Centres / 100k femmes]."
+        tests:
+          - not_null
+      - name: densite_centres_pour_100k_hab
+        description: "Densité de centres pour 100 000 habitants [Unité : Centres / 100k habitants]."
+        tests:
+          - not_null
+
+  - name: mart_carte_centres_ville
+    description: >
+      Table géographique sans duplication temporelle prête pour la cartographie Power BI des centres de radiologie par commune.
+      Hypothèse méthodologique : les dates d'ouverture des centres de dépistage ne sont pas disponibles dans la source ;
+      on part du principe qu'ils existent depuis au moins 2014 sans pouvoir le confirmer.
+      À relier à dim_regions via code_region (relation 1:N) pour croiser avec mart_depistage_centres_region sans double-comptage.
+    columns:
+      - name: id_mart_carte_ville
+        description: "Clé primaire SHA-256 unique par couple (code_region, code_departement, ville)."
+        tests:
+          - unique
+          - not_null
+      - name: code_region
+        description: "Code Insee sur 2 caractères de la région (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: nom_region
+        description: "Nom officiel de la région."
+        tests:
+          - not_null
+      - name: code_departement
+        description: "Code département sur 2 ou 3 caractères [Unité : Code Insee]."
+        tests:
+          - not_null
+      - name: nom_departement
+        description: "Nom du département."
+        tests:
+          - not_null
+      - name: ville
+        description: "Nom de la commune."
+        tests:
+          - not_null
+      - name: localisation_complete
+        description: "Adresse formatée pour le géocodage Power BI (sans ', France' pour les DROM afin d'optimiser la reconnaissance cartographique)."
+        tests:
+          - not_null
+      - name: nb_centres
+        description: "Nombre de centres de radiologie dans la commune (non dupliqué sur les années, sommable directement dans Power BI) [Unité : Centres]."
+        tests:
+          - not_null

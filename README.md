@@ -192,7 +192,22 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
   * `code_iso_region` : code normalisé ISO 3166-2:FR (`'FR-IDF'`, `'FR-ARA'`, `'FR-PAC'`, etc.) reconnu nativement par les cartes choroplèthes et visuels Azure Maps / Shape Map dans Power BI.
   * `chef_lieu_region` : préfecture de région / chef-lieu administratif.
 
-### 4.2. Schéma en Étoile dans Power BI
+### 4.2. `mart_depistage_centres_region` : Offre de Centres, Participation et Densité (2014-2022)
+
+* **Grain** : `(annee, code_region)` sur la période **2014-2022** (17 régions actives $\times$ 9 ans = 153 observations).
+* **Hypothèse méthodologique** : Les dates d'ouverture des centres de dépistage ne sont pas disponibles dans la source ; on part du principe qu'ils existent depuis au moins 2014 sans pouvoir le confirmer.
+* **Indicateurs clés prêts pour Power BI** :
+  * `est_derniere_annee` : booléen (`TRUE` pour 2022) permettant de filtrer par défaut dans Power BI afin d'éviter de sommer `nb_centres_region` sur plusieurs années.
+  * `taux_participation_std_pct` [%], `femmes_50_74`, `nb_femmes_participantes_estime`, `nb_femmes_non_participantes_estime`.
+  * `densite_population_hab_km2` [hab/km²], `nb_centres_pour_100k_femmes_50_74`, `densite_centres_pour_100k_hab` et `nb_femmes_50_74_par_centre`.
+
+### 4.3. `mart_carte_centres_ville` : Cartographie des Centres sans Duplication
+
+* **Grain** : `(code_region, code_departement, ville)` (1 ligne par commune, sans duplication temporelle).
+* **Hypothèse méthodologique** : Les dates d'ouverture des centres de dépistage ne sont pas disponibles dans la source ; on part du principe qu'ils existent depuis au moins 2014 sans pouvoir le confirmer.
+* **Conception Power BI** : `nb_centres` est directement sommable à tous les niveaux (commune, département, région, national) sans risque de double-comptage. `localisation_complete` adapte le formatage des DROM (sans `, France`) pour un géocodage fiable dans Power BI.
+
+### 4.4. Schéma en Étoile dans Power BI
 
 ```
                     ┌─────────────────────────┐
