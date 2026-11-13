@@ -7,9 +7,23 @@ with centres_ville as (
         max(nom_departement) as nom_departement,
         ville,
         case
-            when code_region in ('01', '02', '03', '04', '06')
-                then concat(ville, ', ', max(nom_departement))
-            else concat(ville, ', ', max(nom_departement), ', France')
+            when code_region = '04'
+                then concat(
+                    regexp_replace(regexp_replace(ville, r'^ST[\s-]+', 'SAINT-'), r'^STE[\s-]+', 'SAINTE-'),
+                    ', Réunion'
+                )
+            when code_region in ('01', '02', '03', '06')
+                then concat(
+                    regexp_replace(regexp_replace(ville, r'^ST[\s-]+', 'SAINT-'), r'^STE[\s-]+', 'SAINTE-'),
+                    ', ',
+                    max(nom_departement)
+                )
+            else concat(
+                regexp_replace(regexp_replace(ville, r'^ST[\s-]+', 'SAINT-'), r'^STE[\s-]+', 'SAINTE-'),
+                ', ',
+                max(nom_departement),
+                ', France'
+            )
         end as localisation_complete,
         cast(count(nom_centre_radiologie) as int64) as nb_centres
     from {{ ref('stg_centres_radiologie') }}
