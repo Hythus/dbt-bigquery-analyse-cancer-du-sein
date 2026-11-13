@@ -305,5 +305,94 @@ models:
         tests:
           - not_null
 
+  - name: int_carte_centres_depistage_ville
+    description: >
+      Table intermédiaire cartographique à la maille communale (ville) croisant l'implantation géographique des centres
+      de radiologie/mammographie (stg_centres_radiologie), la participation régionale au dépistage organisé
+      (stg_depistage_taux_standardise_2016_2025) et la densité de population régionale estimée (stg_pop_regions_age / superficie INSEE).
+      Conçue pour les visuels cartographiques (Azure Maps / Carte choroplèthe + bulles) dans Power BI.
+    columns:
+      - name: id_carte_centre_ville
+        description: "Clé primaire unique synthétique (hash sha256 de periode_biennale, code_region, code_departement et ville)."
+        tests:
+          - unique
+          - not_null
+
+      - name: periode_biennale
+        description: "Période biennale du taux de dépistage (ex: '2023-2024'). [Unité : période biennale]"
+        tests:
+          - not_null
+
+      - name: annee_fin_periode
+        description: "Année de fin de la période biennale (2017 à 2025). [Unité : année civile]"
+        tests:
+          - not_null
+
+      - name: code_region
+        description: "Code INSEE officiel de la région sur 2 caractères. [Unité : code INSEE]"
+        tests:
+          - not_null
+
+      - name: nom_region
+        description: "Libellé normalisé de la région administrative française."
+        tests:
+          - not_null
+
+      - name: code_departement
+        description: "Code INSEE du département sur 2 ou 3 caractères. [Unité : code département]"
+        tests:
+          - not_null
+
+      - name: nom_departement
+        description: "Libellé du département d'implantation."
+        tests:
+          - not_null
+
+      - name: ville
+        description: "Commune d'implantation du ou des centres de radiologie."
+        tests:
+          - not_null
+
+      - name: localisation_complete
+        description: "Chaîne géographique complète ('VILLE, Département, France') optimisée pour le géocodage sans ambiguïté dans Power BI."
+        tests:
+          - not_null
+
+      - name: nb_centre
+        description: "Nombre de centres de radiologie/mammographie recensés dans cette commune. [Unité : centres]"
+        tests:
+          - not_null
+
+      - name: nb_centres_total_region
+        description: "Nombre total de centres de radiologie dans la région d'appartenance (pour comparaison et info-bulles). [Unité : centres]"
+        tests:
+          - not_null
+
+      - name: moy_taux_std_participation
+        description: "Moyenne régionale des taux départementaux standardisés de participation au dépistage organisé. [Unité : %]"
+        tests:
+          - not_null
+
+      - name: population_regionale
+        description: "Population totale estimée de la région (tous sexes, tous âges) pour l'année de fin de période. [Unité : habitants]"
+        tests:
+          - not_null
+
+      - name: superficie_region_km2
+        description: "Superficie terrestre officielle INSEE/IGN de la région. [Unité : km²]"
+        tests:
+          - not_null
+
+      - name: densite_population_hab_km2
+        description: "Densité de population régionale estimée (population_regionale / superficie_region_km2). [Unité : hab/km²]"
+        tests:
+          - not_null
+
+      - name: densite_centres_region_pour_100k_hab
+        description: "Densité régionale d'équipement en centres de radiologie pour 100 000 habitants. [Unité : centres pour 100 000 hab]"
+        tests:
+          - not_null
+
+
 
 
