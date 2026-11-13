@@ -95,7 +95,7 @@ La couche staging isole les tables brutes, applique un renommage métier homogè
 
 ---
 
-## 3. Couche Intermediate (`models/intermediate/`) - 2 Tables Métier
+## 3. Couche Intermediate (`models/intermediate/`) - 4 Tables Métier
 
 Les modèles intermédiaires croisent les données hospitalières, épidémiologiques et financières pour produire des indicateurs prêts pour l'analyse et la dataviz.
 
@@ -153,6 +153,26 @@ Les données financières brutes de l'Assurance Maladie (`stg_depenses_onco`) ne
 6. **Consolidation médico-économique par patiente** :
    * `nb_patientes` : effectif régionalisé total pour le cancer du sein.
    * `cout_moyen_par_patiente_euros` = $\frac{\text{montant\_euros}}{\text{nb\_patientes}}$ (dépense moyenne par patiente pour ce poste de soins).
+
+### 3.3. `int_nb_centre_taux_depistage_region` : Offre de Centres de Radiologie et Participation au Dépistage
+* **Problématique traitée** : *La densité de centres de radiologie/mammographie influence-t-elle le taux de participation au dépistage organisé dans les régions ?*
+* **Grain** : `(periode_biennale, code_region)` (2016-2017 à 2024-2025, 126 observations : 14 régions $\times$ 9 périodes biennales).
+* **Tables croisées** :
+  * `stg_centres_radiologie` : dénombrement des centres de radiologie (`nb_centre` [centres]) par région.
+  * `stg_depistage_taux_standardise_2016_2025` : moyenne régionale des taux standardisés de participation (`moy_taux_std_participation` [%]) par période biennale (`periode_biennale` et `annee_fin_periode`).
+  * `stg_pop_cible_regions` : population féminine cible 50-74 ans (`femmes_50_74`) et totale (`femmes_total`) jointe sur `(code_region, annee_fin_periode)`.
+* **Indicateurs estimés** :
+  * `nb_femmes_participantes_estime` = $\text{femmes\_50\_74} \times \frac{\text{moy\_taux\_std\_participation}}{100}$ [femmes].
+  * `nb_femmes_non_participantes_estime` = $\text{femmes\_50\_74} - \text{nb\_femmes\_participantes\_estime}$ [femmes].
+  * `nb_femmes_50_74_par_centre` = $\frac{\text{femmes\_50\_74}}{\text{nb\_centre}}$ [femmes par centre].
+
+### 3.4. `int_carte_centres_depistage_ville` : Cartographie des Centres et Densité de Population
+* **Problématique traitée** : *Comment se répartissent les centres de radiologie dans les communes par rapport à la densité de population régionale et à la participation au dépistage ?*
+* **Grain** : `(periode_biennale, code_region, code_departement, ville)` (~9 000 observations sur 2016-2025).
+* **Tables croisées** :
+  * `stg_centres_radiologie` : dénombrement des centres par commune (`nb_centre` [centres]) et création du champ `localisation_complete` (`'VILLE, Département, France'`) pour un géocodage Power BI sans ambiguïté.
+  * `stg_depistage_taux_standardise_2016_2025` : participation régionale (`moy_taux_std_participation` [%]).
+  * `stg_pop_regions_age` (`code_sexe = 'E'`) + superficies officielles INSEE/IGN : calcul de `population_regionale` [habitants], `densite_population_hab_km2` [hab/km²] et `densite_centres_region_pour_100k_hab` [centres pour 100 000 hab].
 
 ---
 
@@ -252,26 +272,6 @@ Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyse
   * `indice_base_2004` : indice d'évolution en base 100 en 2004 [indice].
   * `evolution_pct_depuis_1990` [%] et `evolution_pct_depuis_2004` [%].
   * `ordre_affichage` (1 à 14, 101 à 103, 200) pour garantir le tri chronologique natif sur les axes Power BI.
-
-### 5.4. `int_nb_centre_taux_depistage_region` : Offre de Centres de Radiologie et Participation au Dépistage
-* **Problématique traitée** : *La densité de centres de radiologie/mammographie influence-t-elle le taux de participation au dépistage organisé dans les régions ?*
-* **Grain** : `(periode_biennale, code_region)` (2016-2017 à 2024-2025, 126 observations : 14 régions $\times$ 9 périodes biennales).
-* **Tables croisées** :
-  * `stg_centres_radiologie` : dénombrement des centres de radiologie (`nb_centre` [centres]) par région.
-  * `stg_depistage_taux_standardise_2016_2025` : moyenne régionale des taux standardisés de participation (`moy_taux_std_participation` [%]) par période biennale (`periode_biennale` et `annee_fin_periode`).
-  * `stg_pop_cible_regions` : population féminine cible 50-74 ans (`femmes_50_74`) et totale (`femmes_total`) jointe sur `(code_region, annee_fin_periode)`.
-* **Indicateurs estimés** :
-  * `nb_femmes_participantes_estime` = $\text{femmes\_50\_74} \times \frac{\text{moy\_taux\_std\_participation}}{100}$ [femmes].
-  * `nb_femmes_non_participantes_estime` = $\text{femmes\_50\_74} - \text{nb\_femmes\_participantes\_estime}$ [femmes].
-  * `nb_femmes_50_74_par_centre` = $\frac{\text{femmes\_50\_74}}{\text{nb\_centre}}$ [femmes par centre].
-
-### 5.5. `int_carte_centres_depistage_ville` : Cartographie des Centres et Densité de Population
-* **Problématique traitée** : *Comment se répartissent les centres de radiologie dans les communes par rapport à la densité de population régionale et à la participation au dépistage ?*
-* **Grain** : `(periode_biennale, code_region, code_departement, ville)` (~9 000 observations sur 2016-2025).
-* **Tables croisées** :
-  * `stg_centres_radiologie` : dénombrement des centres par commune (`nb_centre` [centres]) et création du champ `localisation_complete` (`'VILLE, Département, France'`) pour un géocodage Power BI sans ambiguïté.
-  * `stg_depistage_taux_standardise_2016_2025` : participation régionale (`moy_taux_std_participation` [%]).
-  * `stg_pop_regions_age` (`code_sexe = 'E'`) + superficies officielles INSEE/IGN : calcul de `population_regionale` [habitants], `densite_population_hab_km2` [hab/km²] et `densite_centres_region_pour_100k_hab` [centres pour 100 000 hab].
 
 ---
 

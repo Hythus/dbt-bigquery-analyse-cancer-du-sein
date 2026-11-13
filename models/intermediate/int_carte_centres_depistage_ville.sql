@@ -101,3 +101,4 @@ select
     )))) as id_carte_centre_ville,
     *
 from joined
+
