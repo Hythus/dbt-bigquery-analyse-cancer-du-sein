@@ -238,4 +238,47 @@ models:
       - name: evolution_annuelle_pct
         description: "Variation relative en pourcentage par rapport à l'année immédiatement précédente ((taux_N - taux_N-1) / taux_N-1 * 100). [Unité : %]"
 
+  - name: int_nb_centre_taux_depistage_region
+    description: >
+      Table intermédiaire croisant l'offre territoriale de centres de radiologie/mammographie (stg_centres_radiologie)
+      avec la participation standardisée au dépistage organisé du cancer du sein par région et période biennale
+      (stg_depistage_taux_standardise_2016_2025).
+    columns:
+      - name: id_centre_taux_depistage
+        description: "Clé primaire unique synthétique (hash sha256 de periode_biennale et code_region)."
+        tests:
+          - unique
+          - not_null
+
+      - name: periode_biennale
+        description: "Période biennale du taux de dépistage (ex: '2016-2017'). [Unité : période biennale]"
+        tests:
+          - not_null
+
+      - name: annee_fin_periode
+        description: "Année de fin de la période biennale pour l'affichage chronologique (2017 à 2025). [Unité : année civile]"
+        tests:
+          - not_null
+
+      - name: code_region
+        description: "Code INSEE officiel de la région sur 2 caractères. [Unité : code INSEE]"
+        tests:
+          - not_null
+
+      - name: nom_region
+        description: "Libellé normalisé de la région administrative française."
+        tests:
+          - not_null
+
+      - name: nb_centre
+        description: "Nombre de centres de radiologie/mammographie recensés dans la région. [Unité : centres]"
+        tests:
+          - not_null
+
+      - name: moy_taux_std_participation
+        description: "Moyenne régionale des taux départementaux standardisés de participation au dépistage organisé. [Unité : %]"
+        tests:
+          - not_null
+
+
 

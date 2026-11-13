@@ -253,11 +253,18 @@ Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyse
   * `evolution_pct_depuis_1990` [%] et `evolution_pct_depuis_2004` [%].
   * `ordre_affichage` (1 à 14, 101 à 103, 200) pour garantir le tri chronologique natif sur les axes Power BI.
 
+### 5.4. `int_nb_centre_taux_depistage_region` : Offre de Centres de Radiologie et Participation au Dépistage
+* **Problématique traitée** : *La densité de centres de radiologie/mammographie influence-t-elle le taux de participation au dépistage organisé dans les régions ?*
+* **Grain** : `(periode_biennale, code_region)` (2016-2017 à 2024-2025, 126 observations : 14 régions $\times$ 9 périodes biennales).
+* **Tables croisées** :
+  * `stg_centres_radiologie` : dénombrement des centres de radiologie (`nb_centre` [centres]) par région.
+  * `stg_depistage_taux_standardise_2016_2025` : moyenne régionale des taux standardisés de participation (`moy_taux_std_participation` [%]) par période biennale (`periode_biennale` et `annee_fin_periode`).
+
 ---
 
 ## 6. Tests de Données et Validation de Qualité
 
-Le projet intègre **196 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=196 WARN=0 ERROR=0`) :
+Le projet intègre **204 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=204 WARN=0 ERROR=0`) :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).
