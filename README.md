@@ -259,12 +259,17 @@ Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyse
 * **Tables croisées** :
   * `stg_centres_radiologie` : dénombrement des centres de radiologie (`nb_centre` [centres]) par région.
   * `stg_depistage_taux_standardise_2016_2025` : moyenne régionale des taux standardisés de participation (`moy_taux_std_participation` [%]) par période biennale (`periode_biennale` et `annee_fin_periode`).
+  * `stg_pop_cible_regions` : population féminine cible 50-74 ans (`femmes_50_74`) et totale (`femmes_total`) jointe sur `(code_region, annee_fin_periode)`.
+* **Indicateurs estimés** :
+  * `nb_femmes_participantes_estime` = $\text{femmes\_50\_74} \times \frac{\text{moy\_taux\_std\_participation}}{100}$ [femmes].
+  * `nb_femmes_non_participantes_estime` = $\text{femmes\_50\_74} - \text{nb\_femmes\_participantes\_estime}$ [femmes].
+  * `nb_femmes_50_74_par_centre` = $\frac{\text{femmes\_50\_74}}{\text{nb\_centre}}$ [femmes par centre].
 
 ---
 
 ## 6. Tests de Données et Validation de Qualité
 
-Le projet intègre **204 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=204 WARN=0 ERROR=0`) :
+Le projet intègre **209 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=209 WARN=0 ERROR=0`) :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).

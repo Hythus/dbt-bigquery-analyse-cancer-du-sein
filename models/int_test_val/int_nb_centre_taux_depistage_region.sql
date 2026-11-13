@@ -21,6 +21,17 @@ participation as (
 
 ),
 
+pop_cible as (
+
+    select
+        annee,
+        code_region,
+        population_femmes_50_74_ans as femmes_50_74,
+        population_femmes_total as femmes_total
+    from {{ ref('stg_pop_cible_regions') }}
+
+),
+
 joined as (
 
     select
@@ -29,10 +40,18 @@ joined as (
         nb.code_region,
         nb.nom_region,
         cast(nb.nb_centre as int64) as nb_centre,
-        p.moy_taux_std_participation
+        cast(pop.femmes_50_74 as int64) as femmes_50_74,
+        cast(pop.femmes_total as int64) as femmes_total,
+        p.moy_taux_std_participation,
+        cast(round(pop.femmes_50_74 * (p.moy_taux_std_participation / 100.0)) as int64) as nb_femmes_participantes_estime,
+        cast(pop.femmes_50_74 - round(pop.femmes_50_74 * (p.moy_taux_std_participation / 100.0)) as int64) as nb_femmes_non_participantes_estime,
+        cast(round(safe_divide(pop.femmes_50_74, nb.nb_centre)) as int64) as nb_femmes_50_74_par_centre
     from nb_centre_region nb
     inner join participation p
       on nb.code_region = p.code_region
+    left join pop_cible pop
+      on nb.code_region = pop.code_region
+     and p.annee_fin_periode = pop.annee
 
 )
 

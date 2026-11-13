@@ -240,9 +240,9 @@ models:
 
   - name: int_nb_centre_taux_depistage_region
     description: >
-      Table intermédiaire croisant l'offre territoriale de centres de radiologie/mammographie (stg_centres_radiologie)
-      avec la participation standardisée au dépistage organisé du cancer du sein par région et période biennale
-      (stg_depistage_taux_standardise_2016_2025).
+      Table intermédiaire croisant l'offre territoriale de centres de radiologie/mammographie (stg_centres_radiologie),
+      la population cible féminine (stg_pop_cible_regions) et la participation standardisée au dépistage organisé du cancer du sein
+      par région et période biennale (stg_depistage_taux_standardise_2016_2025), incluant l'estimation du volume de participantes.
     columns:
       - name: id_centre_taux_depistage
         description: "Clé primaire unique synthétique (hash sha256 de periode_biennale et code_region)."
@@ -275,8 +275,33 @@ models:
         tests:
           - not_null
 
+      - name: femmes_50_74
+        description: "Population féminine cible du dépistage organisé (50 à 74 ans) dans la région pour l'année de fin de période. [Unité : personnes]"
+        tests:
+          - not_null
+
+      - name: femmes_total
+        description: "Population féminine totale de la région pour l'année de fin de période. [Unité : habitantes]"
+        tests:
+          - not_null
+
       - name: moy_taux_std_participation
         description: "Moyenne régionale des taux départementaux standardisés de participation au dépistage organisé. [Unité : %]"
+        tests:
+          - not_null
+
+      - name: nb_femmes_participantes_estime
+        description: "Estimation du nombre de femmes de 50 à 74 ans ayant participé au dépistage organisé (femmes_50_74 * moy_taux_std_participation / 100). [Unité : femmes]"
+        tests:
+          - not_null
+
+      - name: nb_femmes_non_participantes_estime
+        description: "Estimation du nombre de femmes cibles (50-74 ans) n'ayant pas participé au dépistage organisé (femmes_50_74 - nb_femmes_participantes_estime). [Unité : femmes]"
+        tests:
+          - not_null
+
+      - name: nb_femmes_50_74_par_centre
+        description: "Ratio de pression démographique par centre : nombre moyen de femmes cibles (50-74 ans) par centre de radiologie (femmes_50_74 / nb_centre). [Unité : femmes par centre]"
         tests:
           - not_null
 
