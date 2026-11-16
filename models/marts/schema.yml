@@ -252,10 +252,10 @@ models:
         tests:
           - not_null
 
-  - name: mart_correlation_depistage_incidence_mortalite_region
+  - name: mart_correlation_depistage_prevalence_mortalite_region
     description: >
-      Table de faits régionale (2014-2022) prête pour Power BI croisant dépistage organisé, cas actifs/surveillance,
-      incidence de référence et mortalité par cancer du sein déclinée par tranches d'âge (< 50, 50-74, 75+ et classes officielles < 65, 65-84, 85+).
+      Table de faits régionale (2015-2022, 144 lignes : 18 régions × 8 ans) prête pour Power BI mettant en lien
+      dépistage organisé, prévalence Ameli (active, sous surveillance et totale) et mortalité (globale, par tranches < 50 / 50-74 / 75+ et taux brut / 100k).
       À relier en 1:N à dim_regions (code_region) et DIM_annee (annee).
     columns:
       - name: id_mart_correlation_region
@@ -264,7 +264,7 @@ models:
           - unique
           - not_null
       - name: annee
-        description: "Année civile (2014 à 2022), clé étrangère vers DIM_annee [Unité : Année]."
+        description: "Année civile (2015 à 2022), clé étrangère vers DIM_annee [Unité : Année]."
         tests:
           - not_null
       - name: code_region
@@ -287,12 +287,34 @@ models:
         description: "Nombre de femmes dépistées dans le cadre du dépistage organisé (NULL pour Mayotte) [Unité : Femmes]."
       - name: taux_participation_std_pct
         description: "Taux standardisé officiel de participation au dépistage organisé (NULL pour Mayotte) [Unité : %]."
+      - name: population_assurees_ameli
+        description: "Population assurée de référence dans la cartographie Ameli des pathologies [Unité : Personnes]."
+        tests:
+          - not_null
       - name: nb_patientes_actives_sein
         description: "Effectif régional de patientes en prise en charge active du cancer du sein (2015-2022) [Unité : Patientes]."
+        tests:
+          - not_null
       - name: nb_patientes_surveillance_sein
         description: "Effectif régional de patientes sous surveillance (2015-2022) [Unité : Patientes]."
-      - name: taux_incidence_ref_region
-        description: "Taux d'incidence standardisé régional de référence estimé sur 2007-2016 (NULL pour Mayotte et 976) [Unité : Cas / 100k femmes]."
+        tests:
+          - not_null
+      - name: nb_patientes_total_sein
+        description: "Effectif total de patientes suivies pour cancer du sein (actif + surveillance) [Unité : Patientes]."
+        tests:
+          - not_null
+      - name: prevalence_active_pct
+        description: "Prévalence régionale du cancer du sein en phase active (pour 100 assurés Ameli) [Unité : %]."
+        tests:
+          - not_null
+      - name: prevalence_surveillance_pct
+        description: "Prévalence régionale du cancer du sein sous surveillance (pour 100 assurés Ameli) [Unité : %]."
+        tests:
+          - not_null
+      - name: prevalence_totale_pct
+        description: "Prévalence régionale totale du cancer du sein (actif + surveillance, pour 100 assurés Ameli) [Unité : %]."
+        tests:
+          - not_null
       - name: nb_deces_sein_femmes
         description: "Nombre annuel de décès féminins imputables au cancer du sein dans la région [Unité : Décès]."
         tests:
@@ -313,28 +335,15 @@ models:
         description: "Nombre annuel estimé de décès féminins par cancer du sein à 75 ans et plus (post-dépistage) [Unité : Décès]."
         tests:
           - not_null
-      - name: nb_deces_sein_moins_65_ans
-        description: "Nombre annuel officiel de décès féminins par cancer du sein avant 65 ans [Unité : Décès]."
+      - name: taux_brut_mortalite_sein_pour_100k
+        description: "Taux brut annuel de mortalité féminine par cancer du sein pour 100 000 femmes [Unité : Décès / 100k femmes]."
         tests:
           - not_null
-      - name: nb_deces_sein_65_84_ans
-        description: "Nombre annuel officiel de décès féminins par cancer du sein entre 65 et 84 ans [Unité : Décès]."
-        tests:
-          - not_null
-      - name: nb_deces_sein_85_ans_plus
-        description: "Nombre annuel officiel de décès féminins par cancer du sein à 85 ans et plus [Unité : Décès]."
-        tests:
-          - not_null
-      - name: taux_mortalite_std_moins_65_ans
-        description: "Taux de mortalité standardisé officiel chez les moins de 65 ans (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
-      - name: taux_mortalite_std_65_84_ans
-        description: "Taux de mortalité standardisé officiel chez les 65-84 ans (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
-      - name: taux_mortalite_std_85_ans_plus
-        description: "Taux de mortalité standardisé officiel chez les 85 ans et plus (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
 
   - name: mart_correlation_age_region_sein
     description: >
-      Table de faits allégée par tranche d'âge quinquennale féminine (9 colonnes : 4 clés + 5 métriques, 2014-2022), prête pour Power BI.
+      Table de faits par tranche d'âge quinquennale féminine (2015-2022, 2 160 lignes : 8 ans × 18 régions × 15 tranches), prête pour Power BI,
+      mettant en lien dépistage par tranche d'âge, prévalence Ameli (active/surveillance/totale) et mortalité ventilée au prorata de la population féminine.
       À relier en 1:N à dim_regions (code_region), DIM_annee (annee) et dim_tranches_age (code_tranche_age_5).
     columns:
       - name: id_mart_correlation_age_region
@@ -343,7 +352,7 @@ models:
           - unique
           - not_null
       - name: annee
-        description: "Année civile (2014 à 2022), clé étrangère vers DIM_annee [Unité : Année]."
+        description: "Année civile (2015 à 2022), clé étrangère vers DIM_annee [Unité : Année]."
         tests:
           - not_null
       - name: code_region
@@ -363,16 +372,30 @@ models:
                 to: ref('dim_tranches_age')
                 field: code_tranche_age_5
       - name: population_femmes
-        description: "Population féminine de la région dans cette tranche d'âge [Unité : Femmes]."
+        description: "Population féminine INSEE de la région dans cette tranche d'âge [Unité : Femmes]."
         tests:
           - not_null
       - name: taux_participation_brut_tranche_pct
         description: "Taux de participation brut au dépistage organisé dans la tranche d'âge (renseigné sur 50-74 ans uniquement, hors Mayotte) [Unité : %]."
+      - name: population_assurees_ameli
+        description: "Population féminine assurée Ameli dans cette tranche d'âge [Unité : Femmes]."
       - name: nb_patientes_actives_sein
-        description: "Patientes en prise en charge active du cancer du sein dans la tranche d'âge (2015-2022) [Unité : Patientes]."
+        description: "Patientes en prise en charge active du cancer du sein dans la tranche d'âge (NULL si secret statistique < 11) [Unité : Patientes]."
       - name: nb_patientes_surveillance_sein
-        description: "Patientes sous surveillance dans la tranche d'âge (2015-2022) [Unité : Patientes]."
+        description: "Patientes sous surveillance dans la tranche d'âge (NULL si secret statistique < 11) [Unité : Patientes]."
+      - name: nb_patientes_total_sein
+        description: "Total des patientes suivies (actif + surveillance) dans la tranche d'âge [Unité : Patientes]."
+      - name: prevalence_active_pct
+        description: "Prévalence du cancer du sein actif dans cette tranche d'âge (pour 100 femmes assurées) [Unité : %]."
+      - name: prevalence_surveillance_pct
+        description: "Prévalence du cancer du sein sous surveillance dans cette tranche d'âge (pour 100 femmes assurées) [Unité : %]."
+      - name: prevalence_totale_pct
+        description: "Prévalence totale du cancer du sein dans cette tranche d'âge (pour 100 femmes assurées) [Unité : %]."
       - name: nb_deces_sein_femmes
         description: "Décès féminins par cancer du sein estimés sur la tranche quinquennale (prorata population de la tranche décennale) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_toutes_causes_femmes
+        description: "Décès féminins toutes causes estimés sur la tranche quinquennale (prorata population de la tranche décennale) [Unité : Décès]."
         tests:
           - not_null

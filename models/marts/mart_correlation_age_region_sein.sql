@@ -27,7 +27,7 @@ pop_age as (
     from {{ source('data_clean', 'pop_regions_age') }}
     where sexe = 'F'
       and age_min >= 25
-      and annee between 2014 and 2022
+      and annee between 2015 and 2022
 
 ),
 
@@ -48,7 +48,7 @@ pop_age_avec_part as (
 
 taux_brut_depistage_unpivoted as (
 
-    {% for yr in range(2014, 2023) %}
+    {% for yr in range(2015, 2023) %}
     {% set prev_yr = yr - 1 %}
     select
         {{ yr }} as annee,
@@ -85,11 +85,16 @@ effectifs_sein_age as (
         cast(annee as int64) as annee,
         lpad(trim(cast(code_region as string)), 2, '0') as code_region,
         trim(tranche_age_5) as code_tranche_age_5,
-        cast(sum(case when type_cancer_sein = 'Cancer du sein de la femme actif' then nb_patients else 0 end) as int64) as nb_patientes_actives_sein,
-        cast(sum(case when type_cancer_sein = 'Cancer du sein de la femme sous surveillance' then nb_patients else 0 end) as int64) as nb_patientes_surveillance_sein
+        cast(max(population) as int64) as population_assurees_ameli,
+        cast(max(case when type_cancer_sein = 'Cancer du sein de la femme actif' then nb_patients end) as int64) as nb_patientes_actives_sein,
+        cast(max(case when type_cancer_sein = 'Cancer du sein de la femme sous surveillance' then nb_patients end) as int64) as nb_patientes_surveillance_sein,
+        cast(max(case when type_cancer_sein is null then nb_patients end) as int64) as nb_patientes_total_sein,
+        round(max(case when type_cancer_sein = 'Cancer du sein de la femme actif' then cast(prevalence_pct as float64) end), 3) as prevalence_active_pct,
+        round(max(case when type_cancer_sein = 'Cancer du sein de la femme sous surveillance' then cast(prevalence_pct as float64) end), 3) as prevalence_surveillance_pct,
+        round(max(case when type_cancer_sein is null then cast(prevalence_pct as float64) end), 3) as prevalence_totale_pct
     from {{ source('data_clean', 'effectifs_sein') }}
     where sexe = 'FEMMES'
-      and annee between 2014 and 2022
+      and annee between 2015 and 2022
     group by 1, 2, 3
 
 ),
@@ -103,7 +108,20 @@ mortalite_sein_10 as (
         cast(deces as float64) as deces_sein_10
     from {{ source('data_clean', 'effectif_mortalite_sein_region') }}
     where sexe = 'Femmes'
-      and annee between 2014 and 2022
+      and annee between 2015 and 2022
+
+),
+
+mortalite_tc_10 as (
+
+    select
+        cast(annee as int64) as annee,
+        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
+        trim(classe_age) as code_tranche_10,
+        cast(deces as float64) as deces_tc_10
+    from {{ source('data_clean', 'effectif_mortalite_region') }}
+    where sexe = 'Femmes'
+      and annee between 2015 and 2022
 
 ),
 
@@ -115,9 +133,15 @@ joined as (
         p.code_tranche_age_5,
         p.population_femmes,
         tb.taux_participation_brut_tranche_pct,
+        eff.population_assurees_ameli,
         eff.nb_patientes_actives_sein,
         eff.nb_patientes_surveillance_sein,
-        round(ms.deces_sein_10 * p.part_pop_dans_tranche_10, 2) as nb_deces_sein_femmes
+        eff.nb_patientes_total_sein,
+        eff.prevalence_active_pct,
+        eff.prevalence_surveillance_pct,
+        eff.prevalence_totale_pct,
+        round(ms.deces_sein_10 * p.part_pop_dans_tranche_10, 2) as nb_deces_sein_femmes,
+        round(mtc.deces_tc_10 * p.part_pop_dans_tranche_10, 2) as nb_deces_toutes_causes_femmes
     from pop_age_avec_part p
     inner join regions r
       on p.code_region = r.code_region
@@ -133,6 +157,10 @@ joined as (
       on p.annee = ms.annee
      and p.code_region = ms.code_region
      and p.code_tranche_10 = ms.code_tranche_10
+    left join mortalite_tc_10 mtc
+      on p.annee = mtc.annee
+     and p.code_region = mtc.code_region
+     and p.code_tranche_10 = mtc.code_tranche_10
 
 )
 
