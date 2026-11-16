@@ -38,7 +38,7 @@ sources:
   - name: depistage
     description: "Données de dépistage organisé du cancer du sein (Santé Publique France / Insee)."
     database: cancer-du-sein-513216
-    schema: depistage
+    schema: Data_brute
     tables:
       - name: France_Participation_AGE_2021-2022
         description: "Participation au dépistage organisé par tranche d'âge pour la campagne 2021-2022."
@@ -68,19 +68,19 @@ sources:
         description: "Indicateurs d'évaluation et de détection du dépistage pour Guyane (2008-2020)."
       - name: indicateurs_evolution_HdF_2008-2020_Cancers
         description: "Indicateurs d'évaluation et de détection du dépistage pour Hauts-de-France (2008-2020)."
-      - name: indicateurs_evolution_IdF_2008-2020_Cancers
+      - name: indicateurs_evolution_IdF_2008-2020_Cancers_typed
         description: "Indicateurs d'évaluation et de détection du dépistage pour Île-de-France (2008-2020)."
-      - name: indicateurs_evolution_Martinique_2008-2020_Cancers
+      - name: indicateurs_evolution_Martinique_2008-2020_Cancers_typed
         description: "Indicateurs d'évaluation et de détection du dépistage pour Martinique (2008-2020)."
-      - name: indicateurs_evolution_Normandie_2008-2020_Cancers
+      - name: indicateurs_evolution_Normandie_2008-2020_Cancers_typed
         description: "Indicateurs d'évaluation et de détection du dépistage pour Normandie (2008-2020)."
-      - name: indicateurs_evolution_Occitanie_2008-2020_Cancers
+      - name: indicateurs_evolution_Occitanie_2008-2020_Cancers_typed
         description: "Indicateurs d'évaluation et de détection du dépistage pour Occitanie (2008-2020)."
-      - name: indicateurs_evolution_PACA_2008-2020_Cancers
+      - name: indicateurs_evolution_PACA_2008-2020_Cancers_typed
         description: "Indicateurs d'évaluation et de détection du dépistage pour PACA (2008-2020)."
-      - name: indicateurs_evolution_PdL_2008-2020_Cancers
+      - name: indicateurs_evolution_PdL_2008-2020_Cancers_typed
         description: "Indicateurs d'évaluation et de détection du dépistage pour Pays de la Loire (2008-2020)."
-      - name: indicateurs_evolution_Reunion_2008-2020_Cancers
+      - name: indicateurs_evolution_Reunion_2008-2020_Cancers_typed
         description: "Indicateurs d'évaluation et de détection du dépistage pour La Réunion (2008-2020)."
 
 models:

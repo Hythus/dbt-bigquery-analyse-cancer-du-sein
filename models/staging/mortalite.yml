@@ -4,7 +4,7 @@ sources:
   - name: mortalite
     description: "Données brutes de mortalité régionale dans BigQuery."
     database: cancer-du-sein-513216
-    schema: mortalite
+    schema: Data_brute
     tables:
       - name: mortalite_region
         description: "Décès et taux standardisés par année, région, sexe et classe d'âge."
