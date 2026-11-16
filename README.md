@@ -212,10 +212,10 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 * **Grain** : `code_tranche_age_5` (`15` tranches quinquennales de `'25-29'` à `'95+'`).
 * **Attributs Power BI** : `libelle_tranche_age_5` trié par `ordre_tranche_age` (`1..15`), `tranche_age_10`, `groupe_depistage` (`'Moins de 50 ans (hors dépistage)'`, `'50-74 ans (cible dépistage)'`, `'75 ans et plus (post-dépistage)'`) trié par `ordre_groupe_depistage` (`1..3`), et booléen `est_cible_depistage` (`TRUE` sur `50-74 ans`).
 
-### 4.5. `mart_correlation_depistage_incidence_mortalite_region` : Table de Faits Régionale Allégée (12 colonnes, 2014-2022)
+### 4.5. `mart_correlation_depistage_incidence_mortalite_region` : Table de Faits Régionale (21 colonnes, 2014-2022)
 
 * **Grain** : `(annee, code_region)` sur **2014-2022** (`162` lignes), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
-* **Métriques conservées (sans redondance dimensionnelle)** : `femmes_total`, `femmes_50_74`, `nb_femmes_depistees`, `taux_participation_std_pct`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `taux_incidence_ref_region`, `nb_deces_sein_femmes`, `nb_deces_toutes_causes_femmes`.
+* **Métriques conservées (sans redondance dimensionnelle)** : `femmes_total`, `femmes_50_74`, `nb_femmes_depistees`, `taux_participation_std_pct`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `taux_incidence_ref_region`, `nb_deces_sein_femmes`, `nb_deces_toutes_causes_femmes`, ainsi que la mortalité par tranche d'âge (`nb_deces_sein_moins_50_ans`, `nb_deces_sein_50_74_ans`, `nb_deces_sein_75_ans_plus`, `nb_deces_sein_moins_65_ans`, `nb_deces_sein_65_84_ans`, `nb_deces_sein_85_ans_plus` et `taux_mortalite_std_*`).
 
 ### 4.6. `mart_correlation_age_region_sein` : Table de Faits Âge × Région Allégée (9 colonnes, 2014-2022)
 

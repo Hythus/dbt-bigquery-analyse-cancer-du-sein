@@ -254,8 +254,9 @@ models:
 
   - name: mart_correlation_depistage_incidence_mortalite_region
     description: >
-      Table de faits régionale allégée (12 colonnes, 2014-2022) prête pour Power BI croisant dépistage organisé, cas actifs/surveillance,
-      incidence de référence et mortalité par cancer du sein. À relier en 1:N à dim_regions (code_region) et DIM_annee (annee).
+      Table de faits régionale (2014-2022) prête pour Power BI croisant dépistage organisé, cas actifs/surveillance,
+      incidence de référence et mortalité par cancer du sein déclinée par tranches d'âge (< 50, 50-74, 75+ et classes officielles < 65, 65-84, 85+).
+      À relier en 1:N à dim_regions (code_region) et DIM_annee (annee).
     columns:
       - name: id_mart_correlation_region
         description: "Clé primaire SHA-256 unique par couple (annee, code_region)."
@@ -300,6 +301,36 @@ models:
         description: "Nombre annuel de décès féminins toutes causes confondues dans la région [Unité : Décès]."
         tests:
           - not_null
+      - name: nb_deces_sein_moins_50_ans
+        description: "Nombre annuel estimé de décès féminins par cancer du sein avant 50 ans (hors dépistage) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_50_74_ans
+        description: "Nombre annuel estimé de décès féminins par cancer du sein entre 50 et 74 ans (cible dépistage) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_75_ans_plus
+        description: "Nombre annuel estimé de décès féminins par cancer du sein à 75 ans et plus (post-dépistage) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_moins_65_ans
+        description: "Nombre annuel officiel de décès féminins par cancer du sein avant 65 ans [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_65_84_ans
+        description: "Nombre annuel officiel de décès féminins par cancer du sein entre 65 et 84 ans [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_85_ans_plus
+        description: "Nombre annuel officiel de décès féminins par cancer du sein à 85 ans et plus [Unité : Décès]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_moins_65_ans
+        description: "Taux de mortalité standardisé officiel chez les moins de 65 ans (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
+      - name: taux_mortalite_std_65_84_ans
+        description: "Taux de mortalité standardisé officiel chez les 65-84 ans (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
+      - name: taux_mortalite_std_85_ans_plus
+        description: "Taux de mortalité standardisé officiel chez les 85 ans et plus (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
 
   - name: mart_correlation_age_region_sein
     description: >

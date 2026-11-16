@@ -99,6 +99,39 @@ mortalite_toutes_causes as (
 
 ),
 
+mortalite_par_groupe_depistage as (
+
+    select
+        m.annee,
+        m.code_region,
+        round(sum(case when a.ordre_groupe_depistage = 1 then m.nb_deces_sein_femmes else 0 end), 2) as nb_deces_sein_moins_50_ans,
+        round(sum(case when a.ordre_groupe_depistage = 2 then m.nb_deces_sein_femmes else 0 end), 2) as nb_deces_sein_50_74_ans,
+        round(sum(case when a.ordre_groupe_depistage = 3 then m.nb_deces_sein_femmes else 0 end), 2) as nb_deces_sein_75_ans_plus
+    from {{ ref('mart_correlation_age_region_sein') }} m
+    inner join {{ ref('dim_tranches_age') }} a
+      on m.code_tranche_age_5 = a.code_tranche_age_5
+    group by 1, 2
+
+),
+
+mortalite_classes_officielles as (
+
+    select
+        cast(annee as int64) as annee,
+        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
+        cast(max(case when classe_age = 'Moins de 65 ans' then effectif_deces end) as int64) as nb_deces_sein_moins_65_ans,
+        cast(max(case when classe_age = 'Entre 65 et 84 ans' then effectif_deces end) as int64) as nb_deces_sein_65_84_ans,
+        cast(max(case when classe_age = '85 ans et plus' then effectif_deces end) as int64) as nb_deces_sein_85_ans_plus,
+        max(case when classe_age = 'Moins de 65 ans' then cast(taux_standardise_age_pour_100000 as float64) end) as taux_mortalite_std_moins_65_ans,
+        max(case when classe_age = 'Entre 65 et 84 ans' then cast(taux_standardise_age_pour_100000 as float64) end) as taux_mortalite_std_65_84_ans,
+        max(case when classe_age = '85 ans et plus' then cast(taux_standardise_age_pour_100000 as float64) end) as taux_mortalite_std_85_ans_plus
+    from {{ source('data_clean', 'taux_mortalite_sein_region') }}
+    where sexe = 'Femmes'
+      and annee between 2014 and 2022
+    group by 1, 2
+
+),
+
 joined as (
 
     select
@@ -112,7 +145,16 @@ joined as (
         eff.nb_patientes_surveillance_sein,
         ir.taux_incidence_ref_region,
         ms.nb_deces_sein_femmes,
-        mtc.nb_deces_toutes_causes_femmes
+        mtc.nb_deces_toutes_causes_femmes,
+        mgd.nb_deces_sein_moins_50_ans,
+        mgd.nb_deces_sein_50_74_ans,
+        mgd.nb_deces_sein_75_ans_plus,
+        mco.nb_deces_sein_moins_65_ans,
+        mco.nb_deces_sein_65_84_ans,
+        mco.nb_deces_sein_85_ans_plus,
+        mco.taux_mortalite_std_moins_65_ans,
+        mco.taux_mortalite_std_65_84_ans,
+        mco.taux_mortalite_std_85_ans_plus
     from pop_cible pc
     inner join regions r
       on pc.code_region = r.code_region
@@ -130,6 +172,12 @@ joined as (
     left join mortalite_toutes_causes mtc
       on pc.annee = mtc.annee
      and pc.code_region = mtc.code_region
+    left join mortalite_par_groupe_depistage mgd
+      on pc.annee = mgd.annee
+     and pc.code_region = mgd.code_region
+    left join mortalite_classes_officielles mco
+      on pc.annee = mco.annee
+     and pc.code_region = mco.code_region
 
 )
 
