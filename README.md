@@ -207,18 +207,22 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 * **Hypothèse méthodologique** : Les dates d'ouverture des centres de dépistage ne sont pas disponibles dans la source ; on part du principe qu'ils existent depuis au moins 2014 sans pouvoir le confirmer.
 * **Conception Power BI** : `nb_centres` est directement sommable à tous les niveaux (commune, département, région, national) sans risque de double-comptage. `localisation_complete` adapte le formatage des DROM (sans `, France`) pour un géocodage fiable dans Power BI.
 
-### 4.4. `mart_correlation_depistage_incidence_mortalite_region` : Corrélation Dépistage, Cas Actifs, Incidence et Mortalité (2014-2022)
+### 4.4. `dim_tranches_age` : Dimension Partagée des Tranches d'Âge Féminines (Seuil Dépistage 50 Ans)
 
-* **Grain** : `(annee, code_region)` sur **2014-2022** (`18 régions × 9 ans = 162 lignes`), alimenté directement depuis `Data_clean` sans modifier les tables sources.
-* **Contenu optimisé pour DAX / Power BI** : composantes additives brutes (`femmes_total`, `femmes_50_74`, `population_cible_depistage`, `nb_femmes_depistees`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `nb_patientes_total_sein`, `nb_deces_sein_femmes`, `nb_deces_sein_moins_65_ans`, `nb_deces_toutes_causes_femmes`) et taux standardisés officiels (`taux_participation_std_pct`, `taux_incidence_ref_region_2007_2016`, `taux_incidence_std_monde_france`, `taux_mortalite_std_*`).
+* **Grain** : `code_tranche_age_5` (`15` tranches quinquennales de `'25-29'` à `'95+'`).
+* **Attributs Power BI** : `libelle_tranche_age_5` trié par `ordre_tranche_age` (`1..15`), `tranche_age_10`, `groupe_depistage` (`'Moins de 50 ans (hors dépistage)'`, `'50-74 ans (cible dépistage)'`, `'75 ans et plus (post-dépistage)'`) trié par `ordre_groupe_depistage` (`1..3`), et booléen `est_cible_depistage` (`TRUE` sur `50-74 ans`).
 
-### 4.5. `mart_correlation_age_region_sein` : Corrélation par Tranche d'Âge Quinquennale (Seuil Strict à 50 Ans)
+### 4.5. `mart_correlation_depistage_incidence_mortalite_region` : Table de Faits Régionale Allégée (12 colonnes, 2014-2022)
 
-* **Grain** : `(annee, code_region, tranche_age_5)` sur **2014-2022** (`2 430 lignes` sur les 15 tranches féminines `25-29 ans` à `95 ans et plus`).
-* **Seuil dépistage à 50 ans** : séparation exacte entre `45-49 ans` et `50-54 ans`, avec `est_cible_depistage` (`TRUE` uniquement sur `50-74 ans`), `groupe_depistage` et colonnes entières `ordre_tranche_age` / `ordre_groupe_depistage` pour le tri Power BI sans Power Query.
-* **Ventilation démographique des décès** : les effectifs décennaux de mortalité de `Data_clean` sont répartis au prorata de la population féminine de chaque sous-tranche quinquennale avec conservation exacte des totaux régionaux.
+* **Grain** : `(annee, code_region)` sur **2014-2022** (`162` lignes), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
+* **Métriques conservées (sans redondance dimensionnelle)** : `femmes_total`, `femmes_50_74`, `nb_femmes_depistees`, `taux_participation_std_pct`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `taux_incidence_ref_region`, `nb_deces_sein_femmes`, `nb_deces_toutes_causes_femmes`.
 
-### 4.6. Schéma en Étoile dans Power BI
+### 4.6. `mart_correlation_age_region_sein` : Table de Faits Âge × Région Allégée (9 colonnes, 2014-2022)
+
+* **Grain** : `(annee, code_region, code_tranche_age_5)` sur **2014-2022** (`2 430` lignes), reliée en `1:N` à `dim_regions`, `DIM_annee` et `dim_tranches_age`.
+* **Contenu minimaliste** : 4 clés (`id_mart_correlation_age_region`, `annee`, `code_region`, `code_tranche_age_5`) + 5 métriques (`population_femmes`, `taux_participation_brut_tranche_pct`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `nb_deces_sein_femmes` ventilés au prorata démographique).
+
+### 4.7. Schéma en Étoile dans Power BI
 
 ```
                     ┌─────────────────────────┐
