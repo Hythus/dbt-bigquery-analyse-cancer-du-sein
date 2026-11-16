@@ -1,0 +1,772 @@
+{
+  "01": {
+    "code_departement": "01",
+    "departement": "Ain",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "02": {
+    "code_departement": "02",
+    "departement": "Aisne",
+    "code_region": "32",
+    "region": "Hauts-de-France",
+    "type_territoire": "departement"
+  },
+  "03": {
+    "code_departement": "03",
+    "departement": "Allier",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "04": {
+    "code_departement": "04",
+    "departement": "Alpes-de-Haute-Provence",
+    "code_region": "93",
+    "region": "Provence-Alpes-Côte d'Azur",
+    "type_territoire": "departement"
+  },
+  "05": {
+    "code_departement": "05",
+    "departement": "Hautes-Alpes",
+    "code_region": "93",
+    "region": "Provence-Alpes-Côte d'Azur",
+    "type_territoire": "departement"
+  },
+  "06": {
+    "code_departement": "06",
+    "departement": "Alpes-Maritimes",
+    "code_region": "93",
+    "region": "Provence-Alpes-Côte d'Azur",
+    "type_territoire": "departement"
+  },
+  "07": {
+    "code_departement": "07",
+    "departement": "Ardèche",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "08": {
+    "code_departement": "08",
+    "departement": "Ardennes",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "09": {
+    "code_departement": "09",
+    "departement": "Ariège",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "10": {
+    "code_departement": "10",
+    "departement": "Aube",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "11": {
+    "code_departement": "11",
+    "departement": "Aude",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "12": {
+    "code_departement": "12",
+    "departement": "Aveyron",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "13": {
+    "code_departement": "13",
+    "departement": "Bouches-du-Rhône",
+    "code_region": "93",
+    "region": "Provence-Alpes-Côte d'Azur",
+    "type_territoire": "departement"
+  },
+  "14": {
+    "code_departement": "14",
+    "departement": "Calvados",
+    "code_region": "28",
+    "region": "Normandie",
+    "type_territoire": "departement"
+  },
+  "15": {
+    "code_departement": "15",
+    "departement": "Cantal",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "16": {
+    "code_departement": "16",
+    "departement": "Charente",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "17": {
+    "code_departement": "17",
+    "departement": "Charente-Maritime",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "18": {
+    "code_departement": "18",
+    "departement": "Cher",
+    "code_region": "24",
+    "region": "Centre-Val de Loire",
+    "type_territoire": "departement"
+  },
+  "19": {
+    "code_departement": "19",
+    "departement": "Corrèze",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "21": {
+    "code_departement": "21",
+    "departement": "Côte-d'Or",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "22": {
+    "code_departement": "22",
+    "departement": "Côtes-d'Armor",
+    "code_region": "53",
+    "region": "Bretagne",
+    "type_territoire": "departement"
+  },
+  "23": {
+    "code_departement": "23",
+    "departement": "Creuse",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "24": {
+    "code_departement": "24",
+    "departement": "Dordogne",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "25": {
+    "code_departement": "25",
+    "departement": "Doubs",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "26": {
+    "code_departement": "26",
+    "departement": "Drôme",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "27": {
+    "code_departement": "27",
+    "departement": "Eure",
+    "code_region": "28",
+    "region": "Normandie",
+    "type_territoire": "departement"
+  },
+  "28": {
+    "code_departement": "28",
+    "departement": "Eure-et-Loir",
+    "code_region": "24",
+    "region": "Centre-Val de Loire",
+    "type_territoire": "departement"
+  },
+  "29": {
+    "code_departement": "29",
+    "departement": "Finistère",
+    "code_region": "53",
+    "region": "Bretagne",
+    "type_territoire": "departement"
+  },
+  "2A": {
+    "code_departement": "2A",
+    "departement": "Corse-du-Sud",
+    "code_region": "94",
+    "region": "Corse",
+    "type_territoire": "departement"
+  },
+  "2B": {
+    "code_departement": "2B",
+    "departement": "Haute-Corse",
+    "code_region": "94",
+    "region": "Corse",
+    "type_territoire": "departement"
+  },
+  "30": {
+    "code_departement": "30",
+    "departement": "Gard",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "31": {
+    "code_departement": "31",
+    "departement": "Haute-Garonne",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "32": {
+    "code_departement": "32",
+    "departement": "Gers",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "33": {
+    "code_departement": "33",
+    "departement": "Gironde",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "34": {
+    "code_departement": "34",
+    "departement": "Hérault",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "35": {
+    "code_departement": "35",
+    "departement": "Ille-et-Vilaine",
+    "code_region": "53",
+    "region": "Bretagne",
+    "type_territoire": "departement"
+  },
+  "36": {
+    "code_departement": "36",
+    "departement": "Indre",
+    "code_region": "24",
+    "region": "Centre-Val de Loire",
+    "type_territoire": "departement"
+  },
+  "37": {
+    "code_departement": "37",
+    "departement": "Indre-et-Loire",
+    "code_region": "24",
+    "region": "Centre-Val de Loire",
+    "type_territoire": "departement"
+  },
+  "38": {
+    "code_departement": "38",
+    "departement": "Isère",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "39": {
+    "code_departement": "39",
+    "departement": "Jura",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "40": {
+    "code_departement": "40",
+    "departement": "Landes",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "41": {
+    "code_departement": "41",
+    "departement": "Loir-et-Cher",
+    "code_region": "24",
+    "region": "Centre-Val de Loire",
+    "type_territoire": "departement"
+  },
+  "42": {
+    "code_departement": "42",
+    "departement": "Loire",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "43": {
+    "code_departement": "43",
+    "departement": "Haute-Loire",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "44": {
+    "code_departement": "44",
+    "departement": "Loire-Atlantique",
+    "code_region": "52",
+    "region": "Pays de la Loire",
+    "type_territoire": "departement"
+  },
+  "45": {
+    "code_departement": "45",
+    "departement": "Loiret",
+    "code_region": "24",
+    "region": "Centre-Val de Loire",
+    "type_territoire": "departement"
+  },
+  "46": {
+    "code_departement": "46",
+    "departement": "Lot",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "47": {
+    "code_departement": "47",
+    "departement": "Lot-et-Garonne",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "48": {
+    "code_departement": "48",
+    "departement": "Lozère",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "49": {
+    "code_departement": "49",
+    "departement": "Maine-et-Loire",
+    "code_region": "52",
+    "region": "Pays de la Loire",
+    "type_territoire": "departement"
+  },
+  "50": {
+    "code_departement": "50",
+    "departement": "Manche",
+    "code_region": "28",
+    "region": "Normandie",
+    "type_territoire": "departement"
+  },
+  "51": {
+    "code_departement": "51",
+    "departement": "Marne",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "52": {
+    "code_departement": "52",
+    "departement": "Haute-Marne",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "53": {
+    "code_departement": "53",
+    "departement": "Mayenne",
+    "code_region": "52",
+    "region": "Pays de la Loire",
+    "type_territoire": "departement"
+  },
+  "54": {
+    "code_departement": "54",
+    "departement": "Meurthe-et-Moselle",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "55": {
+    "code_departement": "55",
+    "departement": "Meuse",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "56": {
+    "code_departement": "56",
+    "departement": "Morbihan",
+    "code_region": "53",
+    "region": "Bretagne",
+    "type_territoire": "departement"
+  },
+  "57": {
+    "code_departement": "57",
+    "departement": "Moselle",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "58": {
+    "code_departement": "58",
+    "departement": "Nièvre",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "59": {
+    "code_departement": "59",
+    "departement": "Nord",
+    "code_region": "32",
+    "region": "Hauts-de-France",
+    "type_territoire": "departement"
+  },
+  "60": {
+    "code_departement": "60",
+    "departement": "Oise",
+    "code_region": "32",
+    "region": "Hauts-de-France",
+    "type_territoire": "departement"
+  },
+  "61": {
+    "code_departement": "61",
+    "departement": "Orne",
+    "code_region": "28",
+    "region": "Normandie",
+    "type_territoire": "departement"
+  },
+  "62": {
+    "code_departement": "62",
+    "departement": "Pas-de-Calais",
+    "code_region": "32",
+    "region": "Hauts-de-France",
+    "type_territoire": "departement"
+  },
+  "63": {
+    "code_departement": "63",
+    "departement": "Puy-de-Dôme",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "64": {
+    "code_departement": "64",
+    "departement": "Pyrénées-Atlantiques",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "65": {
+    "code_departement": "65",
+    "departement": "Hautes-Pyrénées",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "66": {
+    "code_departement": "66",
+    "departement": "Pyrénées-Orientales",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "67": {
+    "code_departement": "67",
+    "departement": "Bas-Rhin",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "68": {
+    "code_departement": "68",
+    "departement": "Haut-Rhin",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "69": {
+    "code_departement": "69",
+    "departement": "Rhône",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "70": {
+    "code_departement": "70",
+    "departement": "Haute-Saône",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "71": {
+    "code_departement": "71",
+    "departement": "Saône-et-Loire",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "72": {
+    "code_departement": "72",
+    "departement": "Sarthe",
+    "code_region": "52",
+    "region": "Pays de la Loire",
+    "type_territoire": "departement"
+  },
+  "73": {
+    "code_departement": "73",
+    "departement": "Savoie",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "74": {
+    "code_departement": "74",
+    "departement": "Haute-Savoie",
+    "code_region": "84",
+    "region": "Auvergne-Rhône-Alpes",
+    "type_territoire": "departement"
+  },
+  "75": {
+    "code_departement": "75",
+    "departement": "Paris",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "76": {
+    "code_departement": "76",
+    "departement": "Seine-Maritime",
+    "code_region": "28",
+    "region": "Normandie",
+    "type_territoire": "departement"
+  },
+  "77": {
+    "code_departement": "77",
+    "departement": "Seine-et-Marne",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "78": {
+    "code_departement": "78",
+    "departement": "Yvelines",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "79": {
+    "code_departement": "79",
+    "departement": "Deux-Sèvres",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "80": {
+    "code_departement": "80",
+    "departement": "Somme",
+    "code_region": "32",
+    "region": "Hauts-de-France",
+    "type_territoire": "departement"
+  },
+  "81": {
+    "code_departement": "81",
+    "departement": "Tarn",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "82": {
+    "code_departement": "82",
+    "departement": "Tarn-et-Garonne",
+    "code_region": "76",
+    "region": "Occitanie",
+    "type_territoire": "departement"
+  },
+  "83": {
+    "code_departement": "83",
+    "departement": "Var",
+    "code_region": "93",
+    "region": "Provence-Alpes-Côte d'Azur",
+    "type_territoire": "departement"
+  },
+  "84": {
+    "code_departement": "84",
+    "departement": "Vaucluse",
+    "code_region": "93",
+    "region": "Provence-Alpes-Côte d'Azur",
+    "type_territoire": "departement"
+  },
+  "85": {
+    "code_departement": "85",
+    "departement": "Vendée",
+    "code_region": "52",
+    "region": "Pays de la Loire",
+    "type_territoire": "departement"
+  },
+  "86": {
+    "code_departement": "86",
+    "departement": "Vienne",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "87": {
+    "code_departement": "87",
+    "departement": "Haute-Vienne",
+    "code_region": "75",
+    "region": "Nouvelle-Aquitaine",
+    "type_territoire": "departement"
+  },
+  "88": {
+    "code_departement": "88",
+    "departement": "Vosges",
+    "code_region": "44",
+    "region": "Grand Est",
+    "type_territoire": "departement"
+  },
+  "89": {
+    "code_departement": "89",
+    "departement": "Yonne",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "90": {
+    "code_departement": "90",
+    "departement": "Territoire de Belfort",
+    "code_region": "27",
+    "region": "Bourgogne-Franche-Comté",
+    "type_territoire": "departement"
+  },
+  "91": {
+    "code_departement": "91",
+    "departement": "Essonne",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "92": {
+    "code_departement": "92",
+    "departement": "Hauts-de-Seine",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "93": {
+    "code_departement": "93",
+    "departement": "Seine-Saint-Denis",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "94": {
+    "code_departement": "94",
+    "departement": "Val-de-Marne",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "95": {
+    "code_departement": "95",
+    "departement": "Val-d'Oise",
+    "code_region": "11",
+    "region": "Île-de-France",
+    "type_territoire": "departement"
+  },
+  "971": {
+    "code_departement": "971",
+    "departement": "Guadeloupe",
+    "code_region": "01",
+    "region": "Guadeloupe",
+    "type_territoire": "departement"
+  },
+  "972": {
+    "code_departement": "972",
+    "departement": "Martinique",
+    "code_region": "02",
+    "region": "Martinique",
+    "type_territoire": "departement"
+  },
+  "973": {
+    "code_departement": "973",
+    "departement": "Guyane",
+    "code_region": "03",
+    "region": "Guyane",
+    "type_territoire": "departement"
+  },
+  "974": {
+    "code_departement": "974",
+    "departement": "La Réunion",
+    "code_region": "04",
+    "region": "La Réunion",
+    "type_territoire": "departement"
+  },
+  "976": {
+    "code_departement": "976",
+    "departement": "Mayotte",
+    "code_region": "06",
+    "region": "Mayotte",
+    "type_territoire": "departement"
+  },
+  "975": {
+    "code_departement": "975",
+    "departement": "Saint-Pierre-et-Miquelon",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "977": {
+    "code_departement": "977",
+    "departement": "Saint-Barthélemy",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "978": {
+    "code_departement": "978",
+    "departement": "Saint-Martin",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "981": {
+    "code_departement": "981",
+    "departement": "Île des Faisans",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "984": {
+    "code_departement": "984",
+    "departement": "Terres australes et antarctiques françaises",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "986": {
+    "code_departement": "986",
+    "departement": "Wallis-et-Futuna",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "987": {
+    "code_departement": "987",
+    "departement": "Polynésie française",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "988": {
+    "code_departement": "988",
+    "departement": "Nouvelle-Calédonie",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  },
+  "989": {
+    "code_departement": "989",
+    "departement": "La Passion-Clipperton",
+    "code_region": "",
+    "region": "",
+    "type_territoire": "collectivite_hors_region"
+  }
+}

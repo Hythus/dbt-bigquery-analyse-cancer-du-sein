@@ -1,5 +1,36 @@
 version: 2
 
+sources:
+  - name: data_clean
+    description: "Jeu de données BigQuery Data_clean préparé par l'équipe (sources pré-nettoyées utilisées en lecture seule pour alimenter les tables Marts)."
+    database: cancer-du-sein-513216
+    schema: Data_clean
+    tables:
+      - name: Participation_depistage_2005-2025
+        description: "Population cible, femmes dépistées et taux de participation standardisé au dépistage organisé (2005-2025)."
+      - name: Taux_brut_participation_2005-2025
+        description: "Taux de participation brut biennal par région et tranche d'âge quinquennale 50-74 ans (2005-2025)."
+      - name: effectif_mortalite_region
+        description: "Effectifs annuels de décès toutes causes par région, sexe et tranche d'âge décennale (2014-2022)."
+      - name: effectif_mortalite_sein_region
+        description: "Effectifs annuels de décès par cancer du sein par région, sexe et tranche d'âge décennale (2014-2022)."
+      - name: taux_mortalite_sein_region
+        description: "Effectifs et taux standardisés de mortalité par cancer du sein par région, sexe et classe d'âge (2014-2022)."
+      - name: effectifs_region
+        description: "Effectifs régionaux de patientes par pathologie oncologique active ou sous surveillance (2015-2022)."
+      - name: effectifs_sein
+        description: "Effectifs de patientes atteintes d'un cancer du sein par région, année et tranche d'âge quinquennale (2015-2022)."
+      - name: incidence_france
+        description: "Incidence nationale annuelle du cancer du sein en France (2014-2022)."
+      - name: incidence_france_age
+        description: "Incidence nationale du cancer du sein par tranche d'âge quinquennale (2014-2022)."
+      - name: incidence_region
+        description: "Incidence et mortalité régionales de référence estimées sur la période 2007-2016."
+      - name: pop_cible_regions
+        description: "Population féminine totale et cible 50-74 ans par région et année (2014-2022)."
+      - name: pop_regions_age
+        description: "Population régionale détaillée par sexe et tranche d'âge quinquennale (2014-2022)."
+
 models:
   - name: dim_regions
     description: "Dimension partagée des régions françaises (18 régions administratives : 13 métropolitaines et 5 DROM) pour le schéma en étoile du modèle Power BI."
@@ -164,5 +195,184 @@ models:
           - not_null
       - name: nb_centres
         description: "Nombre de centres de radiologie dans la commune (non dupliqué sur les années, sommable directement dans Power BI) [Unité : Centres]."
+        tests:
+          - not_null
+
+  - name: mart_correlation_depistage_incidence_mortalite_region
+    description: >
+      Table de faits régionale prête pour Power BI (2014-2022) croisant dépistage organisé, effectifs de patientes (actifs/surveillance),
+      incidence de référence et mortalité par cancer du sein à partir des tables Data_clean. Contient uniquement des composantes additives
+      et les taux standardisés officiels non recalculables en DAX. À relier à dim_regions via code_region (1:N) et DIM_annee via annee.
+    columns:
+      - name: id_mart_correlation_region
+        description: "Clé primaire SHA-256 unique par couple (annee, code_region)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année civile (2014 à 2022) [Unité : Année]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: nom_region
+        description: "Libellé officiel harmonisé de la région."
+        tests:
+          - not_null
+      - name: zone_geographique
+        description: "Zone géographique ('Hexagone' ou 'Outre-mer')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Hexagone', 'Outre-mer']
+      - name: femmes_total
+        description: "Population féminine totale de la région [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: femmes_50_74
+        description: "Population féminine cible du dépistage organisé (50 à 74 ans) [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: population_cible_depistage
+        description: "Population INSEE cible utilisée par Santé Publique France pour le dépistage organisé (NULL pour Mayotte) [Unité : Femmes]."
+      - name: nb_femmes_depistees
+        description: "Nombre de femmes dépistées dans le cadre du dépistage organisé (NULL pour Mayotte) [Unité : Femmes]."
+      - name: taux_participation_std_pct
+        description: "Taux standardisé officiel de participation au dépistage organisé (NULL pour Mayotte) [Unité : %]."
+      - name: nb_patientes_actives_sein
+        description: "Effectif régional de patientes en prise en charge active du cancer du sein (2015-2022) [Unité : Patientes]."
+      - name: nb_patientes_surveillance_sein
+        description: "Effectif régional de patientes en suivi / sous surveillance (2015-2022) [Unité : Patientes]."
+      - name: nb_patientes_total_sein
+        description: "Effectif régional total de patientes suivies pour cancer du sein (actif + surveillance, 2015-2022) [Unité : Patientes]."
+      - name: taux_incidence_ref_region_2007_2016
+        description: "Taux d'incidence standardisé régional de référence estimé sur 2007-2016 (constante régionale, NULL pour Mayotte et 976) [Unité : Cas / 100k femmes]."
+      - name: taux_incidence_std_monde_france
+        description: "Taux national d'incidence du cancer du sein standardisé sur la population mondiale [Unité : Cas / 100k femmes]."
+        tests:
+          - not_null
+      - name: nb_nouveaux_cas_france
+        description: "Nombre national estimé de nouveaux cas incidents de cancer du sein pour l'année [Unité : Cas]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_femmes
+        description: "Nombre annuel de décès féminins imputables au cancer du sein dans la région [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_moins_65_ans
+        description: "Nombre annuel de décès féminins par cancer du sein avant 65 ans [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_toutes_causes_femmes
+        description: "Nombre annuel de décès féminins toutes causes confondues dans la région [Unité : Décès]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_moins_65_ans
+        description: "Taux de mortalité standardisé officiel chez les moins de 65 ans (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
+      - name: taux_mortalite_std_65_84_ans
+        description: "Taux de mortalité standardisé officiel chez les 65-84 ans (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
+      - name: taux_mortalite_std_85_ans_plus
+        description: "Taux de mortalité standardisé officiel chez les 85 ans et plus (issu de Data_clean.taux_mortalite_sein_region) [Unité : Valeur source]."
+
+  - name: mart_correlation_age_region_sein
+    description: >
+      Table de faits détaillée par tranche d'âge quinquennale féminine (25-29 ans à 95 ans et plus) sur 2014-2022, prête pour Power BI.
+      Respecte le seuil strict de 50 ans minimum pour l'éligibilité au dépistage organisé (50-74 ans). Les décès décennaux de
+      Data_clean.effectif_mortalite_sein_region et effectif_mortalite_region sont ventilés au prorata de la population féminine de chaque
+      sous-tranche quinquennale afin de séparer 45-49 ans (hors cible) et 50-54 ans (cible).
+    columns:
+      - name: id_mart_correlation_age_region
+        description: "Clé primaire SHA-256 unique par triplet (annee, code_region, code_tranche_age_5)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année civile (2014 à 2022) [Unité : Année]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: nom_region
+        description: "Libellé officiel harmonisé de la région."
+        tests:
+          - not_null
+      - name: zone_geographique
+        description: "Zone géographique ('Hexagone' ou 'Outre-mer')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Hexagone', 'Outre-mer']
+      - name: tranche_age_5
+        description: "Libellé lisible de la tranche d'âge quinquennale (à trier via ordre_tranche_age dans Power BI)."
+        tests:
+          - not_null
+      - name: code_tranche_age_5
+        description: "Code court de la tranche d'âge quinquennale ('25-29' à '95+')."
+        tests:
+          - not_null
+      - name: age_min
+        description: "Âge minimum de la tranche [Unité : Ans]."
+        tests:
+          - not_null
+      - name: age_max
+        description: "Âge maximum de la tranche (NULL pour '95 ans et plus') [Unité : Ans]."
+      - name: ordre_tranche_age
+        description: "Entier de tri chronologique (1 à 15) pour trier tranche_age_5 dans Power BI."
+        tests:
+          - not_null
+      - name: groupe_depistage
+        description: "Classification d'éligibilité au dépistage organisé (seuil strict à 50 ans)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 'Moins de 50 ans (hors dépistage)'
+                  - '50-74 ans (cible dépistage)'
+                  - '75 ans et plus (post-dépistage)'
+      - name: ordre_groupe_depistage
+        description: "Entier de tri (1 à 3) pour groupe_depistage dans Power BI."
+        tests:
+          - not_null
+      - name: est_cible_depistage
+        description: "Booléen TRUE uniquement pour les tranches 50-74 ans (candidates au dépistage organisé)."
+        tests:
+          - not_null
+      - name: population_femmes
+        description: "Population féminine de la région dans cette tranche d'âge [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: taux_participation_brut_tranche_pct
+        description: "Taux de participation brut au dépistage organisé dans la tranche d'âge (renseigné sur 50-74 ans uniquement, hors Mayotte) [Unité : %]."
+      - name: nb_patientes_actives_sein
+        description: "Patientes en prise en charge active du cancer du sein dans la tranche d'âge (2015-2022) [Unité : Patientes]."
+      - name: nb_patientes_surveillance_sein
+        description: "Patientes en suivi / sous surveillance dans la tranche d'âge (2015-2022) [Unité : Patientes]."
+      - name: nb_patientes_total_sein
+        description: "Total des patientes suivies (actif + surveillance) dans la tranche d'âge (2015-2022) [Unité : Patientes]."
+      - name: nb_deces_sein_femmes
+        description: "Décès féminins par cancer du sein estimés sur la tranche quinquennale (prorata population de la tranche décennale) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_toutes_causes_femmes
+        description: "Décès féminins toutes causes estimés sur la tranche quinquennale (prorata population de la tranche décennale) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: taux_incidence_brut_france_tranche
+        description: "Taux d'incidence brut national de référence pour la tranche d'âge (issu de incidence_france_age) [Unité : Cas / 100k femmes]."
         tests:
           - not_null

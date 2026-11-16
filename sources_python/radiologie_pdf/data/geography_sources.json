@@ -1,0 +1,26 @@
+[
+  {
+    "table": "departments",
+    "url": "https://tabular-api.data.gouv.fr/api/resources/e5f32177-5841-4a46-9c17-f8ff94bd38fc/data/?page_size=200",
+    "resource_id": "e5f32177-5841-4a46-9c17-f8ff94bd38fc",
+    "millesime": "2026",
+    "producteur": "INSEE",
+    "publication": "https://www.data.gouv.fr/datasets/code-officiel-geographique-1"
+  },
+  {
+    "table": "regions",
+    "url": "https://tabular-api.data.gouv.fr/api/resources/f7057d4e-0078-45de-95b7-2a0ce6594807/data/?page_size=200",
+    "resource_id": "f7057d4e-0078-45de-95b7-2a0ce6594807",
+    "millesime": "2026",
+    "producteur": "INSEE",
+    "publication": "https://www.data.gouv.fr/datasets/code-officiel-geographique-1"
+  },
+  {
+    "table": "overseas",
+    "url": "https://tabular-api.data.gouv.fr/api/resources/62cf1ca1-f3db-4f49-bfa1-69aca93d34f1/data/?page_size=200",
+    "resource_id": "62cf1ca1-f3db-4f49-bfa1-69aca93d34f1",
+    "millesime": "2026",
+    "producteur": "INSEE",
+    "publication": "https://www.data.gouv.fr/datasets/code-officiel-geographique-1"
+  }
+]
