@@ -23,7 +23,7 @@ Le projet adopte les principes de l'**Analytics Engineering** en séparant rigou
                          │
                          ▼
    [ Marts Layer (Tables) : mart_projet_cancer ]
-   • dim_regions (Dimension partagée 18 régions pour Power BI)
+   • 7 tables Gold (2 dimensions : dim_regions, dim_tranches_age ; 5 tables de faits dont mart_oncologie_depenses_charge_region)
 ```
 
 ### Configuration des Datasets BigQuery
@@ -222,7 +222,13 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 * **Grain** : `(annee, code_region, code_tranche_age_5)` sur **2015-2022** (`2 160` lignes), reliée en `1:N` à `dim_regions`, `DIM_annee` et `dim_tranches_age`.
 * **Indicateurs** : `population_femmes`, `taux_participation_brut_tranche_pct` *(sur 50-74 ans)*, `population_assurees_ameli`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `nb_patientes_total_sein`, `prevalence_active_pct`, `prevalence_surveillance_pct`, `prevalence_totale_pct`, `nb_deces_sein_femmes` et `nb_deces_toutes_causes_femmes` *(ventilés au prorata démographique)*.
 
-### 4.7. Schéma en Étoile dans Power BI
+### 4.7. `mart_oncologie_depenses_charge_region` : Budget Oncologie et Charge Hospitalière par Spécialité (2018-2024)
+
+* **Grain** : `(annee, code_region, specialite_oncologique)` sur **2018-2024** (`630` lignes : 7 ans $\times$ 18 régions $\times$ 5 spécialités), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
+* **Spécialités harmonisées Ameli $\leftrightarrow$ DREES** (`specialite_oncologique`, triée par `ordre_specialite`) : `'Cancer du sein de la femme'` (`est_cancer_sein = TRUE`), `'Cancer colorectal'`, `'Cancer bronchopulmonaire'`, `'Cancer de la prostate'`, `'Autres cancers'` *(tumeurs malignes DREES `famille_tumeur = 'Maligne'`, sans double-comptage)*.
+* **Indicateurs pour les 2 Pie Charts Power BI** : `nb_patients_ameli`, `depense_totale_euros` *(budget total remboursé ventilé par région)*, `nb_sejours_total`, `nb_sejours_ambulatoire_moins_24h`, `nb_sejours_24h_plus` et `nb_journees_estimees`.
+
+### 4.8. Schéma en Étoile dans Power BI
 
 ```
                     ┌─────────────────────────┐
@@ -307,7 +313,7 @@ Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyse
 
 ## 6. Tests de Données et Validation de Qualité
 
-Le projet intègre **226 tests dbt** exécutés et validés avec succès lors de chaque build (`PASS=226 WARN=0 ERROR=0`) :
+La couche Gold (`models/marts/`, 7 tables dans `mart_projet_cancer`) intègre **100 tests dbt** validés avec succès (`dbt test --select marts` → `PASS=100 WARN=0 ERROR=0`) sur un total de 314 tests définis dans le projet :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).

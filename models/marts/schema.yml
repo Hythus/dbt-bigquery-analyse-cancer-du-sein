@@ -399,3 +399,73 @@ models:
         description: "Décès féminins toutes causes estimés sur la tranche quinquennale (prorata population de la tranche décennale) [Unité : Décès]."
         tests:
           - not_null
+
+  - name: mart_oncologie_depenses_charge_region
+    description: >
+      Table de faits régionale multi-cancers (2018-2024, 630 lignes : 7 ans × 18 régions × 5 spécialités oncologiques), prête pour Power BI.
+      Conçue pour alimenter les deux Pie Charts comparant la part du cancer du sein face aux autres grandes familles de cancers
+      dans le budget oncologie (Ameli, dépenses totales remboursées ventilées au prorata des patientes/patients régionaux)
+      et dans la charge hospitalière MCO (DREES, séjours et journées estimées pour tumeurs malignes).
+      À relier en 1:N à dim_regions (code_region) et DIM_annee (annee).
+    columns:
+      - name: id_mart_onco_depenses_charge
+        description: "Clé primaire SHA-256 unique par triplet (annee, code_region, specialite_oncologique)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année civile d'observation (2018 à 2024), clé étrangère vers DIM_annee [Unité : Année]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères de la région (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: specialite_oncologique
+        description: "Grande spécialité / famille de cancer harmonisée entre Ameli et DREES (légende commune des deux Pie Charts, à trier par ordre_specialite dans Power BI)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 'Cancer du sein de la femme'
+                  - 'Cancer colorectal'
+                  - 'Cancer bronchopulmonaire'
+                  - 'Cancer de la prostate'
+                  - 'Autres cancers'
+      - name: ordre_specialite
+        description: "Entier de tri de 1 à 5 permettant d'afficher le cancer du sein en première position dans Power BI [Unité : Rang]."
+        tests:
+          - not_null
+      - name: est_cancer_sein
+        description: "Indicateur booléen TRUE pour 'Cancer du sein de la femme' et FALSE pour les autres spécialités oncologiques."
+        tests:
+          - not_null
+      - name: nb_patients_ameli
+        description: "Effectif régional Ameli de patients pris en charge (actif + sous surveillance) pour la spécialité (0 si masqué par secret statistique < 11 à Mayotte) [Unité : Patients]."
+        tests:
+          - not_null
+      - name: depense_totale_euros
+        description: "Montant régional estimé des dépenses totales remboursées par l'Assurance Maladie (hôpital, ville, prestations en espèces) pour la spécialité [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: nb_sejours_total
+        description: "Nombre total de séjours hospitaliers MCO (tumeurs malignes DREES) pour la spécialité dans la région [Unité : Séjours]."
+        tests:
+          - not_null
+      - name: nb_sejours_ambulatoire_moins_24h
+        description: "Nombre de séjours hospitaliers MCO de moins de 24 heures (ambulatoire, incluant chimiothérapie et radiothérapie) [Unité : Séjours]."
+        tests:
+          - not_null
+      - name: nb_sejours_24h_plus
+        description: "Nombre de séjours hospitaliers MCO d'hospitalisation complète de 24 heures et plus [Unité : Séjours]."
+        tests:
+          - not_null
+      - name: nb_journees_estimees
+        description: "Volume total estimé de journées d'hospitalisation complète (séjours >= 24h × DMS) pour la spécialité [Unité : Journées]."
+        tests:
+          - not_null
