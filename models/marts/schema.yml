@@ -474,3 +474,87 @@ models:
         description: "Volume total estimé de journées d'hospitalisation complète (séjours >= 24h × DMS) pour la spécialité [Unité : Journées]."
         tests:
           - not_null
+
+  - name: mart_comparatif_sein_vs_onco
+    description: >
+      Table de faits comparative Cancer du sein vs Ensemble des pathologies oncologiques (2.1 Tumeurs malignes / Tous cancers Ameli)
+      sur la période 2015-2024 (2 700 lignes : 10 ans × 18 régions × 15 tranches d'âge quinquennales dès 25 ans).
+      Permet d'analyser dans Power BI la mortalité (brute et pour 100k), les effectifs de patients en prise en charge active et
+      le ratio décès / patients actifs, à la fois sur le périmètre Tous sexes et sur le périmètre Femmes uniquement.
+      À relier en 1:N à dim_regions (code_region), DIM_annee (annee) et dim_tranches_age (tranche_age -> code_tranche_age_5).
+    columns:
+      - name: id_mart_comparatif_sein_onco
+        description: "Clé primaire SHA-256 unique par triplet (annee, code_region, tranche_age)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année civile (2015 à 2024), clé étrangère vers DIM_annee [Unité : Année]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères de la région (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: tranche_age
+        description: "Code de tranche d'âge quinquennale ('25-29' à '95+'), clé étrangère vers dim_tranches_age.code_tranche_age_5."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_tranches_age')
+                field: code_tranche_age_5
+      - name: population_femmes
+        description: "Population féminine INSEE dans la région et tranche d'âge [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: population_totale
+        description: "Population totale INSEE (hommes + femmes) dans la région et tranche d'âge [Unité : Habitants]."
+        tests:
+          - not_null
+      - name: nb_deces_sein
+        description: "Décès féminins par cancer du sein (CépiDc 2.1.10 ventilés au prorata démographique) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_tous_cancers
+        description: "Décès par tumeurs malignes tous sexes confondus (CépiDc 2.1 ventilés au prorata démographique) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: nb_deces_tous_cancers_femmes
+        description: "Décès féminins par tumeurs malignes (CépiDc 2.1 ventilés au prorata démographique) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: taux_mortalite_sein_100k
+        description: "Taux de mortalité par cancer du sein pour 100 000 femmes dans la tranche d'âge [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_tous_cancers_100k
+        description: "Taux de mortalité tous cancers (tumeurs malignes) pour 100 000 habitants tous sexes [Unité : Décès / 100k hab]."
+        tests:
+          - not_null
+      - name: taux_mortalite_tous_cancers_femmes_100k
+        description: "Taux de mortalité tous cancers féminins pour 100 000 femmes [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: nb_patients_actifs_sein
+        description: "Patientes en prise en charge active du cancer du sein (Ameli CAN_SEI_ACT, 0 si secret statistique < 11) [Unité : Patientes]."
+        tests:
+          - not_null
+      - name: nb_patients_actifs_tous_cancers
+        description: "Patients en prise en charge active tous cancers confondus, tous sexes (Ameli CAN_*_ACT) [Unité : Patients]."
+        tests:
+          - not_null
+      - name: nb_patients_actifs_tous_cancers_femmes
+        description: "Patientes en prise en charge active tous cancers confondus, femmes uniquement (Ameli CAN_*_ACT) [Unité : Patientes]."
+        tests:
+          - not_null
+      - name: ratio_deces_actifs_sein_pct
+        description: "Ratio décès / patientes actives pour le cancer du sein (NULL si effectif actif nul/masqué) [Unité : %]."
+      - name: ratio_deces_actifs_tous_cancers_pct
+        description: "Ratio décès / patients actifs tous cancers confondus, tous sexes (NULL si effectif actif nul/masqué) [Unité : %]."
+      - name: ratio_deces_actifs_tous_cancers_femmes_pct
+        description: "Ratio décès / patientes actives tous cancers confondus, femmes uniquement (NULL si effectif actif nul/masqué) [Unité : %]."

@@ -20,6 +20,10 @@ sources:
         description: "Durée moyenne de séjour (DMS) au niveau national par pathologie."
       - name: dms_region
         description: "Durée moyenne de séjour (DMS) au niveau régional par pathologie."
+      - name: effectif_mortalite_tumeurs_region
+        description: "Effectifs annuels de décès CépiDc pour les chapitres '2. Tumeurs' et '2.1 Tumeurs malignes' par région, sexe et tranche d'âge décennale (2014-2024)."
+      - name: effectifs_cancers_age_region
+        description: "Effectifs régionaux Ameli pour tous les cancers (CAN_*) par tranche d'âge quinquennale, sexe et statut (2015-2024)."
       - name: effectifs_region
         description: "Effectifs de patients et prévalence par région et pathologie."
       - name: effectifs_sein
@@ -899,3 +903,96 @@ models:
         description: "Valeur ou taux pour les dépistages de suivi (subséquents)."
       - name: taux_ou_valeur_tous_rangs
         description: "Valeur ou taux pour l'ensemble des dépistages tous rangs confondus."
+
+  - name: stg_effectif_mortalite_tumeurs_region
+    description: "Staging des effectifs annuels de décès CépiDc pour '2. Tumeurs' et '2.1 Tumeurs malignes' par région, sexe et tranche d'âge décennale (2014-2024)."
+    columns:
+      - name: id_effectif_mortalite_tumeurs
+        description: "Clé primaire SHA-256 unique par (annee_deces, code_region, tranche_age_10, sexe, cause_initiale_deces, indicateur)."
+        tests:
+          - unique
+          - not_null
+      - name: annee_deces
+        description: "Année de décès (2014 à 2024)."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères de la région de domicile."
+        tests:
+          - not_null
+      - name: nom_region
+        description: "Nom standardisé de la région de domicile."
+        tests:
+          - not_null
+      - name: tranche_age_10
+        description: "Tranche d'âge décennale ('< 1', '1-24', '25-34' à '95p')."
+        tests:
+          - not_null
+      - name: sexe
+        description: "Sexe ('Femmes', 'Hommes', 'Tous sexes')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Femmes', 'Hommes', 'Tous sexes']
+      - name: cause_initiale_deces
+        description: "Cause médicale initiale ('2. Tumeurs' ou '2.1 Tumeurs malignes')."
+        tests:
+          - not_null
+      - name: indicateur
+        description: "Indicateur CépiDc ('Effectifs de décès')."
+        tests:
+          - not_null
+      - name: nb_deces
+        description: "Effectif de décès."
+        tests:
+          - not_null
+
+  - name: stg_effectifs_cancers_age_region
+    description: "Staging des effectifs régionaux Ameli pour tous les cancers (CAN_*) par année, tranche d'âge quinquennale et sexe (2015-2024)."
+    columns:
+      - name: id_effectif_cancer_age_region
+        description: "Clé primaire SHA-256 unique par (annee, code_region, code_pathologie, code_tranche_age_5, sexe)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année de prise en charge Ameli (2015 à 2024)."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères de la région."
+        tests:
+          - not_null
+      - name: code_pathologie
+        description: "Code pathologie Ameli (CAN_SEI_ACT, CAN_BPU_ACT, CAN_CRE_ACT, CAN_PRO_ACT, CAN_AUT_ACT, ...)."
+        tests:
+          - not_null
+      - name: localisation_cancer
+        description: "Localisation du cancer ou 'Tous cancers'."
+        tests:
+          - not_null
+      - name: statut_cancer
+        description: "Statut de prise en charge ('Actif', 'Sous surveillance', 'Ensemble')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Actif', 'Sous surveillance', 'Ensemble']
+      - name: code_tranche_age_5
+        description: "Tranche d'âge quinquennale harmonisée ('00-04' à '95+' ou 'tsage')."
+        tests:
+          - not_null
+      - name: sexe
+        description: "Sexe ('Femmes', 'Hommes', 'Tous sexes')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Femmes', 'Hommes', 'Tous sexes']
+      - name: nb_patients
+        description: "Effectif régional de patients (NULL si masqué par secret statistique < 11)."
+      - name: population_assuree
+        description: "Population assurée de référence Ameli."
+      - name: taux_prevalence_pct
+        description: "Prévalence correspondante en %."

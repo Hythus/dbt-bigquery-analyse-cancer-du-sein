@@ -23,7 +23,7 @@ Le projet adopte les principes de l'**Analytics Engineering** en séparant rigou
                          │
                          ▼
    [ Marts Layer (Tables) : mart_projet_cancer ]
-   • 7 tables Gold (2 dimensions : dim_regions, dim_tranches_age ; 5 tables de faits dont mart_oncologie_depenses_charge_region)
+   • 8 tables Gold dbt (2 dimensions : dim_regions, dim_tranches_age ; 6 tables de faits dont mart_oncologie_depenses_charge_region et mart_comparatif_sein_vs_onco)
 ```
 
 ### Configuration des Datasets BigQuery
@@ -38,7 +38,7 @@ Grâce à la macro personnalisée [`macros/generate_schema_name.sql`](macros/gen
 
 ---
 
-## 2. Couche Staging (`models/staging/`) - 24 Modèles
+## 2. Couche Staging (`models/staging/`) - 26 Modèles
 
 La couche staging isole les tables brutes, applique un renommage métier homogène (snake_case) et garantit la qualité par typage strict et clés primaires synthétiques.
 
@@ -92,10 +92,12 @@ La couche staging isole les tables brutes, applique un renommage métier homogè
 | `mortalite` | `stg_effectif_mortalite_region` | Dénombrement annuel des décès par région, âge (10 ans) et cause. |
 | `mortalite` | `stg_effectif_mortalite_toutescauses_region` | Dénombrement annuel des décès toutes causes par région, âge (10 ans) et sexe (2014-2024). |
 | `depistage` | `stg_depistage_indicateurs_cancers_regions` | Indicateurs d'évaluation et détection de dépistage unifiés pour 15 régions (2008-2020). |
+| `mortalite` | `stg_effectif_mortalite_tumeurs_region` | Mortalité régionale CépiDc tous cancers (`2.1 Tumeurs malignes` et `2. Tumeurs`) Tous sexes et Femmes (2014-2024). |
+| `effectifs` | `stg_effectifs_cancers_age_region` | Effectifs régionaux et par tranche d'âge Ameli tous cancers (`Cancers`, `dept=999`, Tous sexes et Femmes, 2015-2024). |
 
 ---
 
-## 3. Couche Intermediate (`models/intermediate/`) - 4 Tables Métier
+## 3. Couche Intermediate (`models/intermediate/`) - 5 Tables Métier (8 tables Silver avec la section 5)
 
 Les modèles intermédiaires croisent les données hospitalières, épidémiologiques et financières pour produire des indicateurs prêts pour l'analyse et la dataviz.
 
@@ -174,6 +176,10 @@ Les données financières brutes de l'Assurance Maladie (`stg_depenses_onco`) ne
   * `stg_depistage_taux_standardise_2016_2025` : participation régionale (`moy_taux_std_participation` [%]).
   * `stg_pop_regions_age` (`code_sexe = 'E'`) + superficies officielles INSEE/IGN : calcul de `population_regionale` [habitants], `densite_population_hab_km2` [hab/km²] et `densite_centres_region_pour_100k_hab` [centres pour 100 000 hab].
 
+### 3.5. `int_comparatif_sein_vs_tous_cancers` : Mortalité & Patients Actifs Cancer du Sein vs Tous Cancers (2015-2024)
+Croise la mortalité CépiDc (`2.1 Tumeurs malignes` et `2.1.10 Tumeur maligne du sein`) ventilée au prorata démographique Insee (`stg_pop_regions_age`) avec les effectifs exacts de patients en prise en charge active Ameli (`stg_effectifs_sein` et `stg_effectifs_cancers_age_region`, `dept=999`) pour 18 régions et 15 tranches d'âge quinquennales dès 25 ans (`2 700` lignes).
+* Permet de calculer dans `mart_comparatif_sein_vs_onco` la mortalité `/100k` et le ratio `décès / patients actifs (%)` pour le cancer du sein vs tous cancers (périmètres **Femmes uniquement** et **Tous sexes confondus**).
+
 ---
 
 ## 4. Couche Marts (`models/marts/`) - Modèle en Étoile Power BI
@@ -228,7 +234,13 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 * **Spécialités détaillées (`specialite_oncologique`, triée par `ordre_specialite`)** : `'Cancer du sein de la femme'` (`est_cancer_sein = TRUE`), `'Cancer bronchopulmonaire'`, `'Cancer de la prostate'`, `'Cancer colorectal'`, et décomposition de l'enveloppe Ameli « Autres cancers » en 6 sous-familles DREES (`'Métastases (secondaires)'`, `'Autres digestifs (pancréas, foie, estomac, œsophage)'`, `'Cancer de la vessie'`, `'Hématologie (leucémies) & SNC'`, `'ORL, Utérus, Peau & Thyroïde'`, `'Autres cancers (non détaillés)'`) ventilées au prorata des séjours hospitaliers régionaux.
 * **Indicateurs pour les 2 Donuts Power BI** : `nb_patients_ameli`, `depense_totale_euros` *(budget total remboursé)*, `nb_sejours_total`, `nb_sejours_ambulatoire_moins_24h`, `nb_sejours_24h_plus` et `nb_journees_estimees`.
 
-### 4.8. Schéma en Étoile dans Power BI
+### 4.8. `mart_comparatif_sein_vs_onco` : Comparatif Cancer du Sein vs Tous Cancers par Âge et Région (2015-2024)
+* **Source** : `int_comparatif_sein_vs_tous_cancers` (collecte API CépiDc `2.1 Tumeurs malignes` et Ameli `Cancers` `dept=999` via `extract_comparatif_onco.py`).
+* **Grain** : `(annee, code_region, tranche_age)` — `2 700` lignes (10 ans × 18 régions × 15 tranches quinquennales `25-29` à `95+`).
+* **Clés & Relations** : Clé primaire SHA-256 `id_mart_comparatif_sein_onco`, reliée 1:N à `dim_regions` (`code_region`) et `dim_tranches_age` (`tranche_age` → `code_tranche_age_5`).
+* **Mesures clés** : Permet la comparaison directe dans Power BI (mortalité nationale/régionale, taux `/100k` et ratio `décès / patients actifs (%)`) sur les deux périmètres (**Femmes uniquement** et **Tous sexes confondus**) : `nb_deces_sein`, `nb_deces_tous_cancers`, `nb_deces_tous_cancers_femmes`, `taux_mortalite_sein_100k`, `taux_mortalite_tous_cancers_100k`, `taux_mortalite_tous_cancers_femmes_100k`, `nb_patients_actifs_sein`, `nb_patients_actifs_tous_cancers`, `nb_patients_actifs_tous_cancers_femmes`, `ratio_deces_actifs_sein_pct`, `ratio_deces_actifs_tous_cancers_pct`, `ratio_deces_actifs_tous_cancers_femmes_pct`.
+
+### 4.9. Schéma en Étoile dans Power BI
 
 ```
                     ┌─────────────────────────┐
@@ -313,7 +325,7 @@ Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyse
 
 ## 6. Tests de Données et Validation de Qualité
 
-La couche Gold (`models/marts/`, 7 tables dans `mart_projet_cancer`) intègre **100 tests dbt** validés avec succès (`dbt test --select marts` → `PASS=100 WARN=0 ERROR=0`) sur un total de 314 tests définis dans le projet :
+La couche Gold (`models/marts/`, 8 tables dbt dans `mart_projet_cancer`) intègre **118 tests dbt** validés avec succès (`dbt test --select marts` → `PASS=118 WARN=0 ERROR=0`) sur un total de 371 tests définis dans le projet :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).

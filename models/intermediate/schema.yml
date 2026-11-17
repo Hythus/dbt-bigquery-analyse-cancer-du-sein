@@ -510,3 +510,76 @@ models:
 
       - name: evolution_annuelle_pct
         description: "Variation relative en pourcentage par rapport à l'année immédiatement précédente ((taux_N - taux_N-1) / taux_N-1 * 100). [Unité : %]"
+
+  - name: int_comparatif_sein_vs_tous_cancers
+    description: >
+      Table intermédiaire consolidée comparant le cancer du sein et l'ensemble des tumeurs malignes (tous cancers confondus)
+      par année (2015-2024), région (18 régions) et tranche d'âge quinquennale féminine/totale (15 tranches dès 25 ans, soit 2 700 lignes).
+      Croise les effectifs de mortalité CépiDc (tumeur maligne du sein vs 2.1 Tumeurs malignes ventilés au prorata démographique Insee)
+      avec les effectifs exacts de patients en prise en charge active Ameli (Femmes et Tous sexes).
+    columns:
+      - name: id_comparatif_sein_onco
+        description: "Clé primaire SHA-256 unique par triplet (annee, code_region, code_tranche_age_5)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année civile (2015 à 2024). [Unité : année]"
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères de la région. [Unité : code INSEE]"
+        tests:
+          - not_null
+      - name: nom_region
+        description: "Libellé normalisé de la région."
+        tests:
+          - not_null
+      - name: code_tranche_age_5
+        description: "Code de la tranche d'âge quinquennale ('25-29' à '95+')."
+        tests:
+          - not_null
+      - name: ordre_tranche_age
+        description: "Entier de tri chronologique de 1 à 15."
+        tests:
+          - not_null
+      - name: groupe_depistage
+        description: "Classification d'éligibilité au dépistage organisé (seuil à 50 ans)."
+        tests:
+          - not_null
+      - name: est_cible_depistage
+        description: "Booléen TRUE sur les tranches 50-74 ans."
+        tests:
+          - not_null
+      - name: population_femmes
+        description: "Population féminine INSEE de la région dans la tranche d'âge. [Unité : femmes]"
+        tests:
+          - not_null
+      - name: population_totale
+        description: "Population totale (hommes + femmes) INSEE de la région dans la tranche d'âge. [Unité : habitants]"
+        tests:
+          - not_null
+      - name: nb_deces_sein
+        description: "Effectif estimé de décès féminins par cancer du sein (CépiDc 2.1.10 ventilé). [Unité : décès]"
+        tests:
+          - not_null
+      - name: nb_deces_tous_cancers
+        description: "Effectif estimé de décès par tumeurs malignes tous sexes (CépiDc 2.1 ventilé). [Unité : décès]"
+        tests:
+          - not_null
+      - name: nb_deces_tous_cancers_femmes
+        description: "Effectif estimé de décès féminins par tumeurs malignes (CépiDc 2.1 ventilé). [Unité : décès]"
+        tests:
+          - not_null
+      - name: nb_patients_actifs_sein
+        description: "Effectif de patientes en prise en charge active du cancer du sein (Ameli CAN_SEI_ACT). [Unité : patientes]"
+        tests:
+          - not_null
+      - name: nb_patients_actifs_tous_cancers
+        description: "Effectif de patients actifs tous cancers confondus, tous sexes (Ameli CAN_*_ACT). [Unité : patients]"
+        tests:
+          - not_null
+      - name: nb_patients_actifs_tous_cancers_femmes
+        description: "Effectif de patientes actives tous cancers confondus, femmes uniquement (Ameli CAN_*_ACT). [Unité : patientes]"
+        tests:
+          - not_null
