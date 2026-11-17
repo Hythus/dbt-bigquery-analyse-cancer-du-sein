@@ -224,9 +224,9 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 
 ### 4.7. `mart_oncologie_depenses_charge_region` : Budget Oncologie et Charge Hospitalière par Spécialité (2018-2024)
 
-* **Grain** : `(annee, code_region, specialite_oncologique)` sur **2018-2024** (`630` lignes : 7 ans $\times$ 18 régions $\times$ 5 spécialités), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
-* **Spécialités harmonisées Ameli $\leftrightarrow$ DREES** (`specialite_oncologique`, triée par `ordre_specialite`) : `'Cancer du sein de la femme'` (`est_cancer_sein = TRUE`), `'Cancer colorectal'`, `'Cancer bronchopulmonaire'`, `'Cancer de la prostate'`, `'Autres cancers'` *(tumeurs malignes DREES `famille_tumeur = 'Maligne'`, sans double-comptage)*.
-* **Indicateurs pour les 2 Pie Charts Power BI** : `nb_patients_ameli`, `depense_totale_euros` *(budget total remboursé ventilé par région)*, `nb_sejours_total`, `nb_sejours_ambulatoire_moins_24h`, `nb_sejours_24h_plus` et `nb_journees_estimees`.
+* **Grain** : `(annee, code_region, specialite_oncologique)` sur **2018-2024** (`1 260` lignes : 7 ans $\times$ 18 régions $\times$ 10 spécialités), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
+* **Spécialités détaillées (`specialite_oncologique`, triée par `ordre_specialite`)** : `'Cancer du sein de la femme'` (`est_cancer_sein = TRUE`), `'Cancer bronchopulmonaire'`, `'Cancer de la prostate'`, `'Cancer colorectal'`, et décomposition de l'enveloppe Ameli « Autres cancers » en 6 sous-familles DREES (`'Métastases (secondaires)'`, `'Autres digestifs (pancréas, foie, estomac, œsophage)'`, `'Cancer de la vessie'`, `'Hématologie (leucémies) & SNC'`, `'ORL, Utérus, Peau & Thyroïde'`, `'Autres cancers (non détaillés)'`) ventilées au prorata des séjours hospitaliers régionaux.
+* **Indicateurs pour les 2 Donuts Power BI** : `nb_patients_ameli`, `depense_totale_euros` *(budget total remboursé)*, `nb_sejours_total`, `nb_sejours_ambulatoire_moins_24h`, `nb_sejours_24h_plus` et `nb_journees_estimees`.
 
 ### 4.8. Schéma en Étoile dans Power BI
 
