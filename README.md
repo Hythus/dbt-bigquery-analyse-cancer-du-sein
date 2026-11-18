@@ -23,7 +23,7 @@ Le projet adopte les principes de l'**Analytics Engineering** en séparant rigou
                          │
                          ▼
    [ Marts Layer (Tables) : mart_projet_cancer ]
-   • 8 tables Gold dbt (2 dimensions : dim_regions, dim_tranches_age ; 6 tables de faits dont mart_oncologie_depenses_charge_region et mart_comparatif_sein_vs_onco)
+   • 11 tables Gold dbt (2 dimensions : dim_regions, dim_tranches_age ; 9 tables de faits dont mart_oncologie_depenses_charge_region, mart_comparatif_sein_vs_onco, mart_mortalite_std_distribution_region, mart_depistage_mortalite_delai_region et mart_depenses_sein_postes_evolution)
 ```
 
 ### Configuration des Datasets BigQuery
@@ -221,7 +221,7 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 ### 4.5. `mart_correlation_depistage_prevalence_mortalite_region` : Corrélation Dépistage, Prévalence et Mortalité (2015-2022)
 
 * **Grain** : `(annee, code_region)` sur **2015-2022** (`144` lignes : 18 régions $\times$ 8 ans), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
-* **Indicateurs** : dépistage (`femmes_total`, `femmes_50_74`, `nb_femmes_depistees`, `taux_participation_std_pct`), prévalence Ameli (`population_assurees_ameli`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `nb_patientes_total_sein`, `prevalence_active_pct`, `prevalence_surveillance_pct`, `prevalence_totale_pct`) et mortalité (`nb_deces_sein_femmes`, `nb_deces_toutes_causes_femmes`, `nb_deces_sein_moins_50_ans`, `nb_deces_sein_50_74_ans`, `nb_deces_sein_75_ans_plus`, `taux_brut_mortalite_sein_pour_100k`).
+* **Indicateurs** : dépistage (`femmes_total`, `femmes_50_74`, `nb_femmes_depistees`, `taux_participation_std_pct`), prévalence Ameli (`population_assurees_ameli`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `nb_patientes_total_sein`, `prevalence_active_pct`, `prevalence_surveillance_pct`, `prevalence_totale_pct`) et mortalité (`nb_deces_sein_femmes`, `nb_deces_toutes_causes_femmes`, `nb_deces_sein_moins_50_ans`, `nb_deces_sein_50_74_ans`, `nb_deces_sein_75_ans_plus`, `taux_brut_mortalite_sein_pour_100k`, `taux_mortalite_std_sein_pour_100k`).
 
 ### 4.6. `mart_correlation_age_region_sein` : Corrélation Âge × Région (Dépistage, Prévalence et Mortalité, 2015-2022)
 
@@ -240,7 +240,21 @@ Ce modèle référence les **18 régions administratives françaises** (13 régi
 * **Clés & Relations** : Clé primaire SHA-256 `id_mart_comparatif_sein_onco`, reliée 1:N à `dim_regions` (`code_region`) et `dim_tranches_age` (`tranche_age` → `code_tranche_age_5`).
 * **Mesures clés** : Permet la comparaison directe dans Power BI (mortalité nationale/régionale, taux `/100k` et ratio `décès / patients actifs (%)`) sur les deux périmètres (**Femmes uniquement** et **Tous sexes confondus**) : `nb_deces_sein`, `nb_deces_tous_cancers`, `nb_deces_tous_cancers_femmes`, `taux_mortalite_sein_100k`, `taux_mortalite_tous_cancers_100k`, `taux_mortalite_tous_cancers_femmes_100k`, `nb_patients_actifs_sein`, `nb_patients_actifs_tous_cancers`, `nb_patients_actifs_tous_cancers_femmes`, `ratio_deces_actifs_sein_pct`, `ratio_deces_actifs_tous_cancers_pct`, `ratio_deces_actifs_tous_cancers_femmes_pct`.
 
-### 4.9. Schéma en Étoile dans Power BI
+### 4.9. `mart_mortalite_std_distribution_region` : Mortalité Standardisée Régionale (Distributions 2014-2022 & Friedman/Wilcoxon)
+* **Grain** : `(annee, code_region)` sur **2014-2024** (`198` lignes : 11 ans $\times$ 18 régions), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
+* **Standardisation directe (`France RP 2022`)** : `taux_mortalite_std_tous_ages_100k`, `taux_mortalite_std_moins_65_100k`, `taux_mortalite_std_50_74_100k`, `taux_mortalite_std_65_84_100k`, `taux_mortalite_std_75_plus_100k`, `taux_mortalite_std_france_100k` et `ecart_std_vs_france_100k`.
+* **Distributions & tests statistiques (`2014-2022`)** : `min_std_2014_2022`, `q1_std_2014_2022`, `mediane_std_2014_2022`, `q3_std_2014_2022`, `max_std_2014_2022`, `iqr_std_2014_2022`, test global de **Friedman** (`friedman_chi2_global = 98,33`, `p = 1,81e-13`) et tests signés de **Wilcoxon** par région vs France (`wilcoxon_stat_vs_france`, `wilcoxon_p_value_brute`, `wilcoxon_p_value_holm`, `statut_wilcoxon_region`).
+
+### 4.10. `mart_depistage_mortalite_delai_region` : Dépistage vs Mortalité avec Décalage Temporel ($t - k$)
+* **Grain** : `(annee_mortalite, code_region, delai_annees)` sur **2014-2024** $\times$ 17 régions hors Mayotte $\times$ 5 délais (`0, 3, 5, 7, 9 ans` $\rightarrow$ `935` lignes), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee_mortalite`).
+* **Variables décalées & contrôles** : `taux_participation_std_lag_pct` et `taux_participation_moy_3ans_lag_pct` (historique `2005-2024`), mortalité standardisée contrôlée par classe d'âge (`taux_mortalite_std_50_74_100k`, `taux_mortalite_std_65_84_100k`, `taux_mortalite_std_75_plus_100k`), `zone_geographique`, `densite_population_hab_km2`, `profil_densite`, `nb_centres_pour_100k_femmes_50_74`, traçabilité `millesime_inventaire_centres`, `population_femmes_insee_t` et `population_assurees_ameli_t`.
+
+### 4.11. `mart_depenses_sein_postes_evolution` : Évolution des Dépenses par Poste (2015-2024) & Ratio Cnam vs ONDAM
+* **Grain** : `(annee, statut_cancer, poste_depense, secteur_hospitalier)` sur **2015-2024** (`460` lignes), reliée à `DIM_annee` (`annee`).
+* **Décomposition analytique** : **4 grands pôles** (`pole_depense_4` trié par `ordre_pole_4` : Médicaments Ville & Liste en sus `+137,0 %`, Hospitalisations `+53,0 %`, Soins de ville `+45,1 %`, Prestations en espèces `+54,7 %`) et **19 postes détaillés** Ameli (`indice_evolution_base_100_2015`, `tcac_2015_2024_pct`, `taux_recours_poste_pct`, `cout_moyen_par_patiente_recourante_euros`).
+* **Comparaison homogène des dénominateurs** : part du cancer du sein dans l'Oncologie Cnam (`16,95 %` en 2022), part **100 % homogène** dans la Cartographie Cnam Toutes Pathologies (`193,76 Md€` $\rightarrow$ **`2,16 %`** en 2022) et rapprochement indicatif avec l'ONDAM exécuté (`247,1 Md€` $\rightarrow$ **`1,69 %`**).
+
+### 4.12. Schéma en Étoile dans Power BI
 
 ```
                     ┌─────────────────────────┐
@@ -325,7 +339,7 @@ Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyse
 
 ## 6. Tests de Données et Validation de Qualité
 
-La couche Gold (`models/marts/`, 8 tables dbt dans `mart_projet_cancer`) intègre **118 tests dbt** validés avec succès (`dbt test --select marts` → `PASS=118 WARN=0 ERROR=0`) sur un total de 371 tests définis dans le projet :
+La couche Gold (`models/marts/`, 11 tables dbt dans `mart_projet_cancer`) intègre **208 tests dbt** validés avec succès (`dbt test --select marts` → `PASS=208 WARN=0 ERROR=0`) sur un total de 461 tests définis dans le projet :
 
 * **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
 * **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).

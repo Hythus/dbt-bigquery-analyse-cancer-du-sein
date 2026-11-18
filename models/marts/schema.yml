@@ -339,6 +339,10 @@ models:
         description: "Taux brut annuel de mortalité féminine par cancer du sein pour 100 000 femmes [Unité : Décès / 100k femmes]."
         tests:
           - not_null
+      - name: taux_mortalite_std_sein_pour_100k
+        description: "Taux annuel de mortalité féminine par cancer du sein standardisé sur l'âge (population de référence France RP 2022) [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
 
   - name: mart_correlation_age_region_sein
     description: >
@@ -558,3 +562,386 @@ models:
         description: "Ratio décès / patients actifs tous cancers confondus, tous sexes (NULL si effectif actif nul/masqué) [Unité : %]."
       - name: ratio_deces_actifs_tous_cancers_femmes_pct
         description: "Ratio décès / patientes actives tous cancers confondus, femmes uniquement (NULL si effectif actif nul/masqué) [Unité : %]."
+
+  - name: mart_mortalite_std_distribution_region
+    description: >
+      Table de faits régionale (2014-2024, 198 lignes : 11 ans × 18 régions) prête pour Power BI comparant les taux de mortalité
+      féminine par cancer du sein standardisés sur l'âge (standardisation directe France RP 2022), avec paramètres de distribution
+      2014-2022 (Q1, médiane, Q3, IQR, min, max) et résultats exacts des tests non-paramétriques de Friedman et Wilcoxon signé vs France.
+      À relier en 1:N à dim_regions (code_region) et DIM_annee (annee).
+    columns:
+      - name: id_mart_mortalite_std_region
+        description: "Clé primaire SHA-256 unique par couple (annee, code_region)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année civile de décès (2014 à 2024), clé étrangère vers DIM_annee [Unité : Année]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères de la région (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: nom_region
+        description: "Nom normalisé de la région."
+        tests:
+          - not_null
+      - name: est_periode_2014_2022
+        description: "Booléen TRUE sur la période d'analyse principale 2014-2022 (9 ans) utilisée pour les distributions et tests Friedman/Wilcoxon."
+        tests:
+          - not_null
+      - name: nb_deces_sein_femmes
+        description: "Effectif annuel de décès féminins par cancer du sein (CépiDc 2.1.10) [Unité : Décès]."
+        tests:
+          - not_null
+      - name: population_femmes_insee
+        description: "Population féminine INSEE de la région [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_brut_100k
+        description: "Taux brut annuel de mortalité féminine par cancer du sein [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_tous_ages_100k
+        description: "Taux standardisé direct sur l'âge tous âges (référence France RP 2022) [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_moins_65_100k
+        description: "Taux standardisé direct chez les femmes de moins de 65 ans [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_50_74_100k
+        description: "Taux standardisé direct sur la tranche cible 50-74 ans [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_65_84_100k
+        description: "Taux standardisé direct sur la tranche 65-84 ans [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_75_plus_100k
+        description: "Taux standardisé direct chez les femmes de 75 ans et plus [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_france_100k
+        description: "Taux standardisé national France entière de l'année pour comparaison [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: ecart_std_vs_france_100k
+        description: "Écart (région - France) du taux standardisé tous âges [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: rang_annuel_region
+        description: "Rang annuel de la région (1 = taux standardisé le plus élevé) [Unité : Rang]."
+        tests:
+          - not_null
+      - name: moyenne_std_2014_2022
+        description: "Moyenne régionale du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: ecart_type_std_2014_2022
+        description: "Écart-type régional du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: min_std_2014_2022
+        description: "Minimum du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: q1_std_2014_2022
+        description: "1er quartile (25e percentile) du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: mediane_std_2014_2022
+        description: "Médiane régionale du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: q3_std_2014_2022
+        description: "3e quartile (75e percentile) du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: max_std_2014_2022
+        description: "Maximum du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: iqr_std_2014_2022
+        description: "Écart interquartile (Q3 - Q1) du taux standardisé sur 2014-2022 [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: rang_median_2014_2022
+        description: "Classement régional selon la médiane 2014-2022 (1 = région la plus touchée) [Unité : Rang]."
+        tests:
+          - not_null
+      - name: friedman_chi2_global
+        description: "Statistique globale du test non-paramétrique de Friedman entre les 18 régions sur 2014-2022 (98,33)."
+        tests:
+          - not_null
+      - name: friedman_p_value_global
+        description: "p-value exacte du test de Friedman sur 2014-2022 (1,81e-13)."
+        tests:
+          - not_null
+      - name: wilcoxon_stat_vs_france
+        description: "Statistique W de Wilcoxon apparié (région vs France sur 2014-2022)."
+        tests:
+          - not_null
+      - name: wilcoxon_p_value_brute
+        description: "p-value exacte bilatérale de Wilcoxon (sans correction multiple)."
+        tests:
+          - not_null
+      - name: wilcoxon_p_value_holm
+        description: "p-value de Wilcoxon ajustée selon Holm-Bonferroni (18 comparaisons régionales)."
+        tests:
+          - not_null
+      - name: statut_wilcoxon_region
+        description: "Qualification de l'écart régional face à la moyenne nationale (p brute < 0,05)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 'Surmortalité significative (p brute < 0,05)'
+                  - 'Sous-mortalité significative (p brute < 0,05)'
+                  - 'Non significatif vs France'
+
+  - name: mart_depistage_mortalite_delai_region
+    description: >
+      Table de faits longitudinale avec décalage temporel (lag t-k pour k in {0, 3, 5, 7, 9} ans, 935 lignes : 11 ans de mortalité
+      2014-2024 × 17 régions hors Mayotte × 5 délais) mettant en lien le taux de participation au dépistage organisé (historique 2005-2024)
+      avec la mortalité standardisée observée k années plus tard, tout en contrôlant par l'âge (50-74, 65-84, 75+) et les facteurs territoriaux.
+      À relier en 1:N à dim_regions (code_region) et DIM_annee (annee_mortalite).
+    columns:
+      - name: id_mart_depistage_delai
+        description: "Clé primaire SHA-256 unique par triplet (annee_mortalite, code_region, delai_annees)."
+        tests:
+          - unique
+          - not_null
+      - name: annee_mortalite
+        description: "Année de mesure de la mortalité (2014 à 2024), à relier à DIM_annee [Unité : Année]."
+        tests:
+          - not_null
+      - name: annee_depistage
+        description: "Année décalée du dépistage (annee_mortalite - delai_annees, soit 2005 à 2024) [Unité : Année]."
+        tests:
+          - not_null
+      - name: delai_annees
+        description: "Décalage temporel en années (0, 3, 5, 7 ou 9 ans) [Unité : Ans]."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 3, 5, 7, 9]
+                quote: false
+      - name: libelle_delai
+        description: "Libellé lisible du décalage (ex. 'Lag 5 ans (t-5)'), à trier par ordre_delai dans Power BI."
+        tests:
+          - not_null
+      - name: ordre_delai
+        description: "Entier de tri de 1 à 5 [Unité : Rang]."
+        tests:
+          - not_null
+      - name: code_region
+        description: "Code officiel Insee sur 2 caractères (clé étrangère vers dim_regions) [Unité : Code Insee]."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_regions')
+                field: code_region
+      - name: nom_region
+        description: "Nom normalisé de la région."
+        tests:
+          - not_null
+      - name: population_cible_insee_50_74_lag
+        description: "Population féminine cible 50-74 ans INSEE à l'année annee_depistage [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: nb_femmes_depistees_lag
+        description: "Nombre de femmes dépistées à l'année annee_depistage [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: taux_participation_std_lag_pct
+        description: "Taux de participation standardisé au dépistage organisé à t - k [Unité : %]."
+        tests:
+          - not_null
+      - name: taux_participation_moy_3ans_lag_pct
+        description: "Moyenne mobile centrée sur 3 ans de la participation autour de t - k (lissage biennal) [Unité : %]."
+        tests:
+          - not_null
+      - name: nb_deces_sein_femmes
+        description: "Décès féminins par cancer du sein à annee_mortalite [Unité : Décès]."
+        tests:
+          - not_null
+      - name: taux_mortalite_brut_100k
+        description: "Taux brut de mortalité à annee_mortalite [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_tous_ages_100k
+        description: "Taux de mortalité standardisé tous âges à annee_mortalite (France RP 2022) [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_50_74_100k
+        description: "Taux standardisé sur les 50-74 ans à annee_mortalite [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_65_84_100k
+        description: "Taux standardisé sur les 65-84 ans à annee_mortalite (cohorte vieillie après dépistage) [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: taux_mortalite_std_75_plus_100k
+        description: "Taux standardisé chez les 75 ans et plus à annee_mortalite [Unité : Décès / 100k femmes]."
+        tests:
+          - not_null
+      - name: zone_geographique
+        description: "Zone géographique ('Hexagone' ou 'Outre-mer') pour contrôler l'effet DROM vs Métropole."
+        tests:
+          - not_null
+      - name: densite_population_hab_km2
+        description: "Densité de population régionale à annee_mortalite [Unité : hab/km²]."
+        tests:
+          - not_null
+      - name: profil_densite
+        description: "Classe de densité territoriale ('Faible (< 80 hab/km²)', 'Intermédiaire (80-150 hab/km²)', 'Forte (> 150 hab/km²)')."
+        tests:
+          - not_null
+      - name: nb_centres_region
+        description: "Nombre de centres recensés dans l'inventaire statique [Unité : Centres]."
+        tests:
+          - not_null
+      - name: nb_centres_pour_100k_femmes_50_74
+        description: "Densité d'offre radiologique pour 100k femmes 50-74 ans à annee_mortalite [Unité : Centres / 100k femmes]."
+        tests:
+          - not_null
+      - name: millesime_inventaire_centres
+        description: "Documentation explicite du millésime statique de l'inventaire des centres ('Inventaire statique PDF 2022-2023 (1 571 centres)')."
+        tests:
+          - not_null
+      - name: population_femmes_insee_t
+        description: "Dénominateur démographique INSEE féminin total en t [Unité : Femmes]."
+        tests:
+          - not_null
+      - name: population_assurees_ameli_t
+        description: "Dénominateur Cnam Cartographie en t (NULL en 2014 car Ameli débute en 2015) [Unité : Assurés]."
+      - name: prevalence_active_sein_pct_t
+        description: "Prévalence active cancer du sein en t (NULL en 2014) [Unité : %]."
+
+  - name: mart_depenses_sein_postes_evolution
+    description: >
+      Table de faits nationale annuelle (2015-2024, 460 lignes : 10 ans × 46 triplets statut × poste × secteur) décomposant
+      l'évolution des dépenses du cancer du sein en 4 grands pôles (Médicaments, Hospitalisations, Soins de ville, Prestations en espèces)
+      et 19 postes détaillés, accompagnée des dénominateurs homogènes Cartographie Cnam Toutes Pathologies et ONDAM exécuté.
+      À relier en 1:N à DIM_annee (annee).
+    columns:
+      - name: id_mart_depense_poste
+        description: "Clé primaire SHA-256 unique par quadruplet (annee, statut_cancer, poste_depense, secteur_hospitalier)."
+        tests:
+          - unique
+          - not_null
+      - name: annee
+        description: "Année civile (2015 à 2024), clé étrangère vers DIM_annee [Unité : Année]."
+        tests:
+          - not_null
+      - name: statut_cancer
+        description: "Statut de prise en charge Ameli ('Actif' ou 'Sous surveillance')."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Actif', 'Sous surveillance']
+      - name: ordre_pole_4
+        description: "Entier de tri de 1 à 4 pour les 4 grands pôles de dépenses [Unité : Rang]."
+        tests:
+          - not_null
+      - name: pole_depense_4
+        description: "Regroupement analytique en 4 pôles (Médicaments, Hospitalisations, Soins de ville, Prestations en espèces)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - 'Médicaments (Ville & Liste en sus MCO)'
+                  - 'Hospitalisations (Séjours MCO, HAD, SSR, ACE)'
+                  - 'Soins de ville (Consultations, transports, paramédical, biologie)'
+                  - 'Prestations en espèces (IJ maladie & Invalidité)'
+      - name: categorie_depense_cnam
+        description: "Catégorie officielle Ameli niveau 1 (Hospitalisations, Soins de ville, Prestations en espèces)."
+        tests:
+          - not_null
+      - name: poste_depense
+        description: "Libellé du poste détaillé de dépense Ameli (19 postes)."
+        tests:
+          - not_null
+      - name: secteur_hospitalier
+        description: "Secteur de soins ('Public', 'Privé', ou 'Non précisé' hors hospitalisation)."
+        tests:
+          - not_null
+      - name: montant_depense_euros
+        description: "Montant annuel remboursé sur le poste [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: montant_depense_millions_euros
+        description: "Montant annuel remboursé exprimé en millions d'euros [Unité : M€]."
+        tests:
+          - not_null
+      - name: nb_patientes_pathologie
+        description: "Effectif national annuel de patientes pour le statut concerné [Unité : Patientes]."
+        tests:
+          - not_null
+      - name: nb_patientes_recourant_poste
+        description: "Nombre de patientes ayant eu au moins un remboursement sur ce poste [Unité : Patientes]."
+        tests:
+          - not_null
+      - name: taux_recours_poste_pct
+        description: "Part des patientes du statut recourant à ce poste de dépense [Unité : %]."
+      - name: cout_moyen_par_patiente_recourante_euros
+        description: "Dépense moyenne par patiente ayant effectivement recouru au poste [Unité : €/patiente]."
+      - name: montant_poste_base_2015_euros
+        description: "Montant de référence en 2015 pour ce poste/statut/secteur [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: indice_evolution_base_100_2015
+        description: "Indice d'évolution du poste en base 100 = année 2015 [Unité : Indice base 100]."
+        tests:
+          - not_null
+      - name: tcac_2015_2024_pct
+        description: "Taux de croissance annuel composé (CAGR) sur 2015-2024 [Unité : % / an]."
+        tests:
+          - not_null
+      - name: total_annuel_cancer_sein_euros
+        description: "Enveloppe annuelle totale du cancer du sein (tous statuts et postes confondus) [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: part_poste_dans_cancer_sein_pct
+        description: "Poids de cette ligne dans le budget annuel du cancer du sein [Unité : %]."
+        tests:
+          - not_null
+      - name: total_annuel_oncologie_cnam_euros
+        description: "Enveloppe annuelle totale de l'oncologie dans la Cartographie Cnam [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: part_poste_dans_oncologie_cnam_pct
+        description: "Poids de ce poste dans le budget total de l'oncologie Cnam [Unité : %]."
+        tests:
+          - not_null
+      - name: part_cancer_sein_dans_oncologie_cnam_pct
+        description: "Part annuelle globale du cancer du sein dans l'enveloppe oncologie Cnam [Unité : %]."
+        tests:
+          - not_null
+      - name: total_annuel_cartographie_cnam_euros
+        description: "Dépenses totales remboursées toutes pathologies confondues (Cartographie Cnam 'Total consommants tous régimes', dénominateur 100 % homogène) [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: part_cancer_sein_dans_cartographie_cnam_pct
+        description: "Part homogène Cnam/Cnam du cancer du sein dans les dépenses totales Cartographie Cnam [Unité : %]."
+        tests:
+          - not_null
+      - name: ondam_annuel_euros
+        description: "ONDAM exécuté / constaté LFSS-PLACSS pour comparaison macroéconomique indicative (247,1 Md€ en 2022) [Unité : Euros (€)]."
+        tests:
+          - not_null
+      - name: part_cancer_sein_dans_ondam_pct
+        description: "Ratio indicatif cancer du sein / ONDAM exécuté (périmètres comptables distincts) [Unité : %]."
+        tests:
+          - not_null

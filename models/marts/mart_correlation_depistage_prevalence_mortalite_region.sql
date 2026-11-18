@@ -110,6 +110,17 @@ mortalite_par_groupe_depistage as (
 
 ),
 
+mortalite_std as (
+
+    select
+        annee,
+        code_region,
+        taux_mortalite_std_tous_ages_100k as taux_mortalite_std_sein_pour_100k
+    from {{ ref('mart_mortalite_std_distribution_region') }}
+    where annee between 2015 and 2022
+
+),
+
 joined as (
 
     select
@@ -131,7 +142,8 @@ joined as (
         mgd.nb_deces_sein_moins_50_ans,
         mgd.nb_deces_sein_50_74_ans,
         mgd.nb_deces_sein_75_ans_plus,
-        round(safe_divide(cast(ms.nb_deces_sein_femmes as float64) * 100000.0, cast(pc.femmes_total as float64)), 2) as taux_brut_mortalite_sein_pour_100k
+        round(safe_divide(cast(ms.nb_deces_sein_femmes as float64) * 100000.0, cast(pc.femmes_total as float64)), 2) as taux_brut_mortalite_sein_pour_100k,
+        mstd.taux_mortalite_std_sein_pour_100k
     from pop_cible pc
     inner join regions r
       on pc.code_region = r.code_region
@@ -150,6 +162,9 @@ joined as (
     left join mortalite_par_groupe_depistage mgd
       on pc.annee = mgd.annee
      and pc.code_region = mgd.code_region
+    left join mortalite_std mstd
+      on pc.annee = mstd.annee
+     and pc.code_region = mstd.code_region
 
 )
 
