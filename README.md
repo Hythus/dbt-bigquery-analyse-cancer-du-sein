@@ -7,6 +7,8 @@
 
 Plateforme décisionnelle **end-to-end** (collecte Open Data en Python, modélisation **dbt Core** sur **Google BigQuery** en architecture Médaillon et restitution **Power BI** en schéma en étoile) dédiée à l'analyse épidémiologique, territoriale et médico-économique du cancer du sein en France sur la période **2014–2024**.
 
+> **Cadre du projet :** Ce dépôt présente ma **contribution personnelle** (collecte API/PDF en Python, modélisation dbt sur BigQuery et conception du rapport Power BI présenté) réalisée au sein d'un **travail de groupe** de fin de cursus **DataBird**.
+
 ---
 
 ## 1. Contexte & Problématiques Santé Publique
@@ -174,5 +176,5 @@ dbt build
 ## 6. Auteur
 
 **Valentin Devalckeneer** — *Data Analyst / Analytics Engineer*  
-Projet de fin de cursus **DataBird** — Novembre 2026  
+Contribution personnelle au sein d'un projet de groupe — Fin de cursus **DataBird** (Novembre 2026)  
 Dépôt GitHub : [Hythus/dbt-bigquery-analyse-cancer-du-sein](https://github.com/Hythus/dbt-bigquery-analyse-cancer-du-sein)
