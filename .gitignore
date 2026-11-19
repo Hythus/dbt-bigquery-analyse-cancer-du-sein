@@ -1,15 +1,32 @@
-
+# dbt
 target/
 dbt_packages/
 logs/
-.env
-*.json
-!sources_python/radiologie_pdf/data/*.json
-dbt init.ipynb
+profiles.yml
+
+# Python & Environnement virtuel
 .venv/
+venv/
 __pycache__/
 *.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Secrets, Credentials & Variables d'environnement
+.env
+.env.*
+*.json
+!sources_python/radiologie_pdf/data/*.json
+*.pem
+*.key
+
+# Notebooks locaux non suivis & exports générés
+dbt init.ipynb
 sources_python/api_secu/out/
 sources_python/api_secu/*.csv
 sources_python/radiologie_pdf/output/
 
+# Système
+.DS_Store
+Thumbs.db
+desktop.ini

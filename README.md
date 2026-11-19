@@ -1,376 +1,178 @@
-# Projet dbt - Analyse Épidémiologique et Médico-Économique du Cancer du Sein
+# 🎗️ Analyse décisionnelle du cancer du sein en France (2014–2024)
 
-Projet dbt (**data build tool**) connecté à **Google BigQuery** (`cancer-du-sein-513216`) dédié au traitement, à la modélisation et à l'analyse des données d'oncologie, de dépistage, d'hospitalisation et de dépenses de santé en France.
+[![dbt Core](https://img.shields.io/badge/dbt%20Core-Analytics%20Engineering-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/)
+[![Google BigQuery](https://img.shields.io/badge/Google%20BigQuery-Data%20Warehouse-4285F4?logo=googlebigquery&logoColor=white)](https://cloud.google.com/bigquery)
+[![Power BI](https://img.shields.io/badge/Power%20BI-Mod%C3%A8le%20%C3%89toile%20%26%20DAX-F2C811?logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
+[![Python 3.13](https://img.shields.io/badge/Python-3.13%20(API%20%26%20PDF)-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+
+Plateforme décisionnelle **end-to-end** (collecte Open Data en Python, modélisation **dbt Core** sur **Google BigQuery** en architecture Médaillon et restitution **Power BI** en schéma en étoile) dédiée à l'analyse épidémiologique, territoriale et médico-économique du cancer du sein en France sur la période **2014–2024**.
 
 ---
 
-## 1. Architecture Générale du Projet
+## 1. Contexte & Problématiques Santé Publique
 
-Le projet adopte les principes de l'**Analytics Engineering** en séparant rigoureusement les couches de données :
+En France, le cancer du sein demeure le premier cancer chez la femme tant en termes de fréquence que de mortalité. Malgré la généralisation du programme national de dépistage organisé (ciblant les femmes de **50 à 74 ans** tous les deux ans), le pilotage public fait face à trois enjeux majeurs autour desquels s'articule ce projet :
 
+1. **Économie de la santé & charge hospitalière** : Comment se positionne le cancer du sein dans les dépenses et l'activité hospitalière de l'oncologie en France ? Quelle est l'ampleur du virage ambulatoire et de l'évolution des postes de dépenses (médicaments innovants, hospitalisations, soins de ville) ?
+2. **Maillage territorial & participation au dépistage** : Avec une participation nationale qui plafonne autour de **48,6 %** (bien en deçà de l'objectif européen de 70 %), l'offre de centres de radiologie agréés suffit-elle à expliquer les écarts régionaux, ou existe-t-il des freins socio-démographiques et urbains ?
+3. **Dynamique par âge, survie & disparités territoriales** : Comment évoluent la prévalence, la létalité apparente et la mortalité standardisée selon la tranche d'âge (avant, pendant et après la fenêtre de dépistage 50–74 ans) et selon les territoires (gradient Nord-Est et décrochage des DROM) ?
+
+---
+
+## 2. Architecture Data & Stack Technique
+
+### Flux de données End-to-End
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 1. SOURCES OPEN DATA OFFICIELLES                                             │
+│    Cnam / Ameli • DREES (MCO) • Santé publique France • CépiDc • INSEE COG   │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 2. EXTRACTION & ENRICHISSEMENT PYTHON 3.13 (sources_python/, scripts_python/)│
+│    • Appels API REST Open Data (Ameli / CépiDc / geo.api.gouv.fr)            │
+│    • Parsing PDF de l'annuaire des centres de radiologie + dédoublonnage     │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 3. DATA WAREHOUSE GOOGLE BIGQUERY (cancer-du-sein-513216)                    │
+│    Data_brute (données brutes) & Data_clean (référentiels pré-nettoyés)      │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 4. MODÉLISATION DBT CORE (45 modèles • 474 tests • persist_docs)             │
+│    Staging (26 vues) ──► Intermediate (8 tables) ──► Marts Gold (11 tables)  │
+│    stg_projet_cancer     int_projet_cancer          mart_projet_cancer       │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 5. BI & DATA VISUALISATION POWER BI (powerbi/)                               │
+│    Modèle en étoile (DIM_regions, dim_tranches_age, DIM_annee ↔ Faits) + DAX │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
-[ Sources BigQuery : Data_brute, depistage, mortalite ]
-                         │
-                         ▼
-   [ Staging Layer (Vues) : stg_projet_cancer ]
-   • Standardisation, typage, déduplication, clés surrogate SHA-256
-   • Persistance des descriptions de colonnes (persist_docs)
-                         │
-                         ▼
- [ Intermediate Layer (Tables) : int_projet_cancer ]
-   • int_charge_hospitaliere_sein (Activité, DMS, composantes DAX)
-   • int_depenses_regionales_sein (Prorata patientes, coût moyen)
-                         │
-                         ▼
-   [ Marts Layer (Tables) : mart_projet_cancer ]
-   • 11 tables Gold dbt (2 dimensions : dim_regions, dim_tranches_age ; 9 tables de faits dont mart_oncologie_depenses_charge_region, mart_comparatif_sein_vs_onco, mart_mortalite_std_distribution_region, mart_depistage_mortalite_delai_region et mart_depenses_sein_postes_evolution)
+
+### Schéma d'architecture Médaillon
+
+- [Schéma d'architecture de synthèse](docs/architecture_medaillon_synthese.jpg)
+- [Schéma d'architecture détaillé](docs/architecture_medaillon_detaillee.jpg)
+
+### Détail des couches dbt (`models/`)
+
+La macro [`macros/generate_schema_name.sql`](macros/generate_schema_name.sql) route chaque couche vers son dataset BigQuery dédié, avec persistance automatique des métadonnées et descriptions de colonnes dans BigQuery (`+persist_docs: relation: true, columns: true`) :
+
+- **Couche `models/staging/` (`stg_projet_cancer` — 26 vues)** :
+  - Standardisation stricte des schémas en `snake_case` et typage explicite (`INT64`, `FLOAT64`, `BOOL`).
+  - Harmonisation des libellés régionaux hétérogènes entre institutions (`'Auvergne et Rhône-Alpes'` → `'Auvergne-Rhône-Alpes'`, `'Nouvelle Aquitaine'` → `'Nouvelle-Aquitaine'`, `'Centre-Val de Loire'` → `'Centre-Val-de-Loire'`) et codes INSEE à 2 caractères (`lpad(..., 2, '0')`).
+  - Génération de clés primaires synthétiques SHA-256 (`to_hex(sha256(to_json_string(struct(...))))`) et déduplication défensive par `QUALIFY ROW_NUMBER() OVER (...) = 1`.
+- **Couche `models/intermediate/` (`int_projet_cancer` — 8 tables Silver)** :
+  - Croisement multi-sources et calcul des composantes brutes destinées aux agrégations DAX (numérateurs et dénominateurs sans biais de moyenne de ratios).
+  - Inclut notamment `int_charge_hospitaliere_sein` (importée sous le nom `FACT_charge_hospitaliere_sein` dans Power BI) et `int_depenses_regionales_sein` (importée sous `FACT_depenses_regionales_sein`), `int_nb_centre_taux_depistage_region`, `int_carte_centres_depistage_ville`, `int_comparatif_sein_vs_tous_cancers`, `int_mortalite_territoriale_sein`, `int_impact_depistage_territoires` et `int_incidence_age_depistage`.
+- **Couche `models/marts/` (`mart_projet_cancer` — 11 tables Gold)** :
+  - **2 dimensions conformes** : `dim_regions` (18 régions, `code_iso_region` ISO 3166-2:FR, `zone_geographique`, `est_metropole`) et `dim_tranches_age` (15 tranches quinquennales de `25-29` à `95+`, seuil strict `est_cible_depistage` 50–74 ans, colonnes de tri natif).
+  - **9 tables de faits prêtes pour Power BI** : `mart_oncologie_depenses_charge_region`, `mart_depenses_sein_postes_evolution`, `mart_depistage_centres_region`, `mart_carte_centres_ville`, `mart_comparatif_sein_vs_onco`, `mart_correlation_depistage_prevalence_mortalite_region`, `mart_correlation_age_region_sein`, `mart_mortalite_std_distribution_region` (standardisation directe France RP 2022 + tests de Friedman et Wilcoxon) et `mart_depistage_mortalite_delai_region` (analyse longitudinale avec décalage temporel `t - k` de 0 à 9 ans).
+- **Qualité & Gouvernance** : **474 tests dbt** (`unique`, `not_null`, intégrité référentielle `relationships` vers `dim_regions` / `dim_tranches_age`, `accepted_values`) + tests singuliers (`tests/assert_stg_mortalite_region_quality.sql`).
+
+### Arborescence du dépôt
+
+```text
+├── dbt_project.yml              # Configuration globale dbt & persist_docs
+├── macros/                      # Macro generate_schema_name.sql
+├── models/
+│   ├── staging/                 # 26 vues Bronze + schema.yml & mortalite.yml
+│   ├── intermediate/            # 8 tables Silver + schema.yml
+│   └── marts/                   # 11 tables Gold (Dimensions + Marts) + schema.yml
+├── tests/                       # Tests SQL singuliers de qualité
+├── sources_python/              # Collecte API (Ameli, CépiDc, DREES) & parsing PDF radiologie
+├── scripts_python/              # Notebooks d'analyse et de démonstration end-to-end
+├── docs/                        # Schémas d'architecture & captures PNG HD Power BI
+└── powerbi/                     # Classeur Power BI (.pbix) en modèle étoile
 ```
 
-### Configuration des Datasets BigQuery
+---
 
-Grâce à la macro personnalisée [`macros/generate_schema_name.sql`](macros/generate_schema_name.sql), les modèles sont acheminés directement vers leurs jeux de données respectifs sans préfixe par défaut :
+## 3. Enseignements Clés & Aperçu des 4 Dashboards Power BI
 
-* **Couche Staging** : dataset `stg_projet_cancer` (matérialisation : `view`).
-* **Couche Intermediate** : dataset `int_projet_cancer` (matérialisation : `table`).
-* **Couche Intermediate R&D / Test** : dataset `Int_test_val` (matérialisation : `table`).
-* **Couche Marts** : dataset `mart_projet_cancer` (matérialisation : `table`).
-* **Persistance des métadonnées (`persist_docs`)** : activée dans `dbt_project.yml` (`relation: true`, `columns: true`), ce qui injecte automatiquement les descriptions de chaque colonne directement dans le dictionnaire de données et l'interface de BigQuery.
+> **Accès aux livrables BI :** [Classeur Power BI (`Projet Cancer du sein.pbix`)](powerbi/Projet%20Cancer%20du%20sein.pbix) • [Export PDF haute définition (`Projet Cancer du sein.pdf`)](docs/Projet%20Cancer%20du%20sein.pdf)
+
+### 1. Prise en charge hospitalière & dépenses régionales (2018–2024)
+Le cancer du sein illustre un paradoxe médico-économique majeur : il concentre **20,66 % des dépenses oncologiques** (~28 Md€ cumulés sur la période), mais ne représente que **5,38 % des journées d'hospitalisation**. Ce découplage s'explique par un **virage ambulatoire massif** (séjours `< 24h` pour chirurgie ambulatoire, chimiothérapie et radiothérapie) et une durée moyenne de séjour courte (**DMS de 3,65 jours**). À l'inverse, l'analyse par poste montre que les **médicaments** (ville et liste en sus MCO) constituent le principal moteur inflationniste (**+137,0 %** entre 2015 et 2024).
+
+![Page 1 — Prise en charge hospitalière et dépenses régionales](docs/page1_prise_en_charge.png)
+
+### 2. Dépistage organisé & maillage territorial (50–74 ans)
+Sur les **1 570 centres agréés** recensés en France (densité moyenne de **15,26 centres pour 100 000 femmes cibles**), le maillage brut ne garantit pas mécaniquement la participation. On observe une sous-performance notable de zones pourtant très denses comme l'**Île-de-France (-10 pts)** ou **PACA (-8 pts)** par rapport à la moyenne nationale (~48,6 %), traduisant des phénomènes de saturation des rendez-vous, de recours au dépistage individuel hors programme et d'inégalités d'accès socio-territoriales.
+
+![Page 2 — Dépistage organisé et maillage territorial](docs/page2_depistage_maillage.png)
+
+### 3. Dynamique par âge & comparatif Tous Cancers
+Grâce au dépistage et aux progrès thérapeutiques, la létalité apparente annuelle du cancer du sein (**5,36 %** — ratio décès / patientes actives) est près de deux fois inférieure à celle de l'ensemble des cancers féminins (**9,42 %**). L'analyse par tranche d'âge met toutefois en lumière deux angles morts hors de la cible réglementaire 50–74 ans : **50,11 % des décès** surviennent chez les femmes de **75 ans et plus**, tandis que **17,13 % des patientes en prise en charge active** ont **moins de 50 ans** (hors dépistage organisé).
+
+![Page 3 — Dynamique par âge et comparatif Tous Cancers](docs/page3_dynamique_age.png)
+
+### 4. Disparités territoriales & gradient Nord-Est / Outre-mer
+En neutralisant l'effet structure d'âge par standardisation directe (population de référence France RP 2022), les écarts régionaux sont hautement significatifs (test global de Friedman : `χ² = 98,33`, `p = 1,81 × 10⁻¹³`). Le **Nord-Est** (Hauts-de-France, Normandie, Grand Est) présente une **surmortalité persistante** malgré une forte participation au dépistage organisé (effet de cohorte, facteurs environnementaux et socio-économiques). À l'opposé, les territoires d'**Outre-mer** enregistrent un net décrochage du dépistage (jusqu'à **-23 pts en Guyane**), dont l'impact sur la mortalité brute est partiellement masqué par une structure démographique plus jeune.
+
+![Page 4 — Disparités territoriales et corrélations](docs/page4_disparites_territoriales.png)
 
 ---
 
-## 2. Couche Staging (`models/staging/`) - 26 Modèles
+## 4. Hypothèses & Limites Méthodologiques
 
-La couche staging isole les tables brutes, applique un renommage métier homogène (snake_case) et garantit la qualité par typage strict et clés primaires synthétiques.
-
-### 2.1. Principes de Transformation et de Nettoyage
-
-1. **Normalisation géographique des régions** :
-   * Harmonisation des libellés hétérogènes entre ministères et agences :
-     * `'Auvergne et Rhône-Alpes'` $\rightarrow$ `'Auvergne-Rhône-Alpes'`
-     * `'Bourgogne et Franche-Comté'` $\rightarrow$ `'Bourgogne-Franche-Comté'`
-     * `'Nouvelle Aquitaine'` $\rightarrow$ `'Nouvelle-Aquitaine'`
-     * `'Centre-Val de Loire'` / `'Centre-Val-de-Loire'` $\rightarrow$ `'Centre-Val-de-Loire'`
-     * Variantes typographiques (apostrophes courbes `’` $\rightarrow$ `'`) pour `'Provence-Alpes-Côte d\'Azur'`.
-   * Standardisation des codes régionaux et départementaux au format ISO/Insee à 2 caractères avec zéro initial (`lpad(..., 2, '0')`).
-
-2. **Génération des clés surrogate (Surrogate Keys)** :
-   * Chaque modèle génère une clé primaire hachée via `to_hex(sha256(to_json_string(struct(...))))`. Cette empreinte garantit l'unicité sans dépendre de clés auto-incrémentées.
-
-3. **Déduplication défensive (`QUALIFY ROW_NUMBER()`)** :
-   * Afin de parer aux doublons éventuels des tables sources brutes (ex: doublons observés sur les taux standardisés de dépistage), une fenêtre analytique `QUALIFY ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ... DESC) = 1` est appliquée systématiquement.
-
-4. **Résolution des valeurs manquantes et codifications** :
-   * `stg_effectifs_sein` : la modalité brute `CAN_SEI_CAT` ne disposant pas de libellé en source a été formellement complétée en `'Cancer du sein de la femme (tous statuts)'`.
-   * `stg_pop_regions_age` : décodage du code sexe (`E` $\rightarrow$ `'Ensemble'`, `F` $\rightarrow$ `'Femmes'`, `H` $\rightarrow$ `'Hommes'`) tout en conservant le code original `code_sexe`.
-   * Conversion booléenne explicite des drapeaux textuels (`'oui'`/`'non'` $\rightarrow$ `TRUE`/`FALSE`).
-
-### 2.2. Répertoire des Modèles Staging
-
-| Dataset Source | Modèle Staging | Description |
-| :--- | :--- | :--- |
-| `Data_brute` | `stg_charge_france` | Séjours hospitaliers par pathologie et durée au niveau national. |
-| `Data_brute` | `stg_charge_region` | Séjours hospitaliers régionaux détaillés (1j à 30j+). |
-| `Data_brute` | `stg_depenses_onco` | Dépenses de santé Assurance Maladie par cancer, statut et secteur. |
-| `Data_brute` | `stg_depenses_patho` | Dépenses de santé détaillées par code pathologie TOP. |
-| `Data_brute` | `stg_centres_radiologie` | Annuaire national des centres de mammographie et radiologie. |
-| `Data_brute` | `stg_dms_france` | Durée moyenne de séjour (DMS) nationale en oncologie. |
-| `Data_brute` | `stg_dms_region` | Durée moyenne de séjour (DMS) régionale par pathologie. |
-| `Data_brute` | `stg_effectifs_region` | Effectifs de patients et prévalence régionale (cartographie TOP). |
-| `Data_brute` | `stg_effectifs_sein` | Patientes cancer du sein par département, âge (quinquennal) et statut. |
-| `Data_brute` | `stg_incidence_france` | Incidence historique nationale (taux bruts, standardisés Europe/Monde). |
-| `Data_brute` | `stg_incidence_france_age`| Incidence nationale détaillée par classe d'âge. |
-| `Data_brute` | `stg_incidence_region` | Incidence et mortalité estimées par région. |
-| `Data_brute` | `stg_pop_cible_regions` | Population cible féminine 50-74 ans et part régionale (1975-2026). |
-| `Data_brute` | `stg_pop_regions_age` | Démographie Insee détaillée par sexe, région et âge (1975-2026). |
-| `depistage` | `stg_depistage_age_2021_2022` | Participation au dépistage organisé par tranche d'âge 2021-2022. |
-| `depistage` | `stg_depistage_age_2022_2023` | Participation au dépistage organisé par tranche d'âge 2022-2023. |
-| `depistage` | `stg_depistage_age_2024_2025` | Participation au dépistage organisé par tranche d'âge 2024-2025. |
-| `depistage` | `stg_depistage_evolution_2005_2025` | Évolution chronologique annuelle du dépistage (format long unpivoted). |
-| `depistage` | `stg_depistage_tranches_age_2005_2025` | Suivi biennal par tranche d'âge Insee (2005-2025). |
-| `depistage` | `stg_depistage_taux_standardise_2016_2025` | Taux standardisés Insee par département et région. |
-| `mortalite` | `stg_mortalite_region` | Taux standardisés de mortalité régionale par classe d'âge. |
-| `mortalite` | `stg_effectif_mortalite_region` | Dénombrement annuel des décès par région, âge (10 ans) et cause. |
-| `mortalite` | `stg_effectif_mortalite_toutescauses_region` | Dénombrement annuel des décès toutes causes par région, âge (10 ans) et sexe (2014-2024). |
-| `depistage` | `stg_depistage_indicateurs_cancers_regions` | Indicateurs d'évaluation et détection de dépistage unifiés pour 15 régions (2008-2020). |
-| `mortalite` | `stg_effectif_mortalite_tumeurs_region` | Mortalité régionale CépiDc tous cancers (`2.1 Tumeurs malignes` et `2. Tumeurs`) Tous sexes et Femmes (2014-2024). |
-| `effectifs` | `stg_effectifs_cancers_age_region` | Effectifs régionaux et par tranche d'âge Ameli tous cancers (`Cancers`, `dept=999`, Tous sexes et Femmes, 2015-2024). |
+- **Regionalisation des dépenses (`int_depenses_regionales_sein`)** : Les données financières de l'Assurance Maladie (Cartographie des pathologies) n'étant publiées qu'à l'échelon national, les dépenses régionales sont estimées par pondération (`effectifs régionaux × coût moyen national par patiente`), appliquée **séparément** pour les patientes en phase active et sous surveillance.
+- **Périmètre Cnam & secret statistique** : La cartographie Ameli capte les patientes prises en charge (notamment via ALD ou soins traceurs), ce qui peut légèrement sous-estimer certaines formes très précoces ou suivis hors régime général ; les effectifs inférieurs à 11 patientes à la maille fine `région × tranche d'âge` sont masqués par secret statistique (`NULL` / `0`).
+- **Ventilation démographique des décès CépiDc** : Les effectifs régionaux de mortalité CépiDc étant diffusés par tranches d'âge décennales (`45-54`, `55-64`, `65-74`...), la reconstitution en tranches quinquennales alignées sur Ameli/INSEE (`50-54`, etc.) repose sur un prorata démographique INSEE féminin exact par région et année.
+- **Inertie épidémiologique & approche observationnelle** : L'effet protecteur du dépistage organisé sur la mortalité s'exerce avec un décalage de **5 à 10 ans** (`mart_depistage_mortalite_delai_region` teste les lags `t-0` à `t-9`), tout en restant une analyse observationnelle exposée aux biais écologiques et aux facteurs confondants territoriaux.
+- **Inventaire statique des centres de radiologie** : L'annuaire PDF des centres ne comportant pas de dates historiques d'ouverture/fermeture, le maillage constitue une photographie statique (millésime 2022–2023) projetée sur l'historique régional pour les comparaisons temporelles.
 
 ---
 
-## 3. Couche Intermediate (`models/intermediate/`) - 5 Tables Métier (8 tables Silver avec la section 5)
+## 5. Guide de Reproduction en Local
 
-Les modèles intermédiaires croisent les données hospitalières, épidémiologiques et financières pour produire des indicateurs prêts pour l'analyse et la dataviz.
-
-### 3.1. `int_charge_hospitaliere_sein` : Activité Hospitalière et DMS
-
-Ce modèle regroupe la charge de soins, la durée de séjour et les effectifs de patientes pour le cancer du sein par région et année (période commune 2018-2024, 126 observations).
-
-#### Choix de Modélisation et Règles de Gestion :
-* **Filtrage nosologique strict** : sélection exclusive de la modalité `'Tumeur maligne du sein'` (excluant les tumeurs bénignes).
-* **Découpage des séjours selon les seuils cliniques** :
-  * `nb_sejours_moins_24h` : prises en charge ambulatoires ou sans nuitée.
-  * `nb_sejours_inf_ou_egal_7j` : séjours courts cumulés de 1 à 7 jours inclus :
-    $$\text{Séjours} \le 7\text{j} = \sum_{k=1}^{7} \text{nb\_sejours\_}k\text{j}$$
-  * `nb_sejours_sup_7j` : séjours longs cumulés strictement supérieurs à 7 jours :
-    $$\text{Séjours} > 7\text{j} = \text{nb\_sejours\_8j} + \text{nb\_sejours\_9j} + \text{nb\_sejours\_10\_19j} + \text{nb\_sejours\_20\_29j} + \text{nb\_sejours\_30j\_plus}$$
-* **Volumétrie totale** : `nbre_hospitalisation` reprend le nombre total de séjours (`nb_sejours_total`).
-* **Durée Moyenne de Séjour (`dms_jours`)** : jointure avec `stg_dms_region` et arrondi à 2 décimales (unité : jours).
-* **Composantes brutes DAX pour Power BI** :
-  * `nb_sejours_sein` : numérateur brut d'hospitalisations pour cancer du sein.
-  * `nb_sejours_onco_total` : dénominateur brut d'hospitalisations oncologiques de la région.
-  * `ratio_cancer_sein_patho_onco` : ratio précalculé à la ligne.
-* **Consolidation patientes et intensité de soins** :
-  * `nb_patientes` : effectif régional de patientes atteintes (`CAN_SEI_ACT` + `CAN_SEI_SUR`).
-  * `taux_sejours_par_patiente` = $\frac{\text{nb\_sejours\_sein}}{\text{nb\_patientes}}$ (nombre moyen de séjours hospitaliers par patiente).
-
----
-
-### 3.2. `int_depenses_regionales_sein` : Ventilation Proratisée des Coûts
-
-Ce modèle reconstruit les dépenses d'Assurance Maladie pour le cancer du sein au niveau régional par grande catégorie de soins sur la période commune (2018-2024, 378 observations : 18 régions $\times$ 7 années $\times$ 3 catégories).
-
-#### Problématique Métier :
-Les données financières brutes de l'Assurance Maladie (`stg_depenses_onco`) ne sont disponibles qu'à l'**échelon national (France entière)**, tandis que la répartition épidémiologique des patientes (`stg_effectifs_region`) est renseignée par région.
-
-#### Méthode de Ventilation Retenue :
-1. **Dénominateur officiel France entière** :
-   * L'effectif national de référence utilisé est le champ officiel `nb_patients_pathologie` présent dans `stg_depenses_onco` (garantissant la cohérence avec le budget global national).
-2. **Ventilation granulaire par sous-pathologie (Actif vs Surveillance)** :
-   * Le comportement de prise en charge différant grandement entre les phases de traitement actif et de surveillance post-traitement, le prorata est appliqué **séparément** avant agrégation :
-     * **Phase active** :
-       $$\text{Prorata}_{\text{Actif}} = \frac{\text{Patientes régionales } (\text{CAN\_SEI\_ACT})}{\text{Total officiel France } (\text{Actif})}$$
-     * **Phase sous surveillance** :
-       $$\text{Prorata}_{\text{Surveillance}} = \frac{\text{Patientes régionales } (\text{CAN\_SEI\_SUR})}{\text{Total officiel France } (\text{Surveillance})}$$
-3. **Calcul du montant régionalisé (`montant_euros`)** :
-   $$\text{Montant Régional (euros)} = \sum_{\text{statut}} \left( \text{Montant National}_{\text{statut, catégorie}} \times \text{Prorata}_{\text{statut}} \right)$$
-4. **Agrégation par Grande Catégorie** :
-   * Les postes fins sont regroupés sous les 3 catégories officielles :
-     * `Hospitalisations (tous secteurs)`
-     * `Soins de ville`
-     * `Prestations en espèces` (indemnités journalières, etc.)
-5. **Composantes brutes DAX pour Power BI** :
-   * `montant_sein_euros` : numérateur brut des dépenses régionales de cancer du sein.
-   * `montant_onco_total_euros` : dénominateur brut de l'ensemble des dépenses oncologiques régionales pour la même catégorie de soins.
-   * `ratio_cancer_sein_patho_onco` : ratio précalculé à la ligne.
-6. **Consolidation médico-économique par patiente** :
-   * `nb_patientes` : effectif régionalisé total pour le cancer du sein.
-   * `cout_moyen_par_patiente_euros` = $\frac{\text{montant\_euros}}{\text{nb\_patientes}}$ (dépense moyenne par patiente pour ce poste de soins).
-
-### 3.3. `int_nb_centre_taux_depistage_region` : Offre de Centres de Radiologie et Participation au Dépistage
-* **Problématique traitée** : *La densité de centres de radiologie/mammographie influence-t-elle le taux de participation au dépistage organisé dans les régions ?*
-* **Grain** : `(periode_biennale, code_region)` (2016-2017 à 2024-2025, 126 observations : 14 régions $\times$ 9 périodes biennales).
-* **Tables croisées** :
-  * `stg_centres_radiologie` : dénombrement des centres de radiologie (`nb_centre` [centres]) par région.
-  * `stg_depistage_taux_standardise_2016_2025` : moyenne régionale des taux standardisés de participation (`moy_taux_std_participation` [%]) par période biennale (`periode_biennale` et `annee_fin_periode`).
-  * `stg_pop_cible_regions` : population féminine cible 50-74 ans (`femmes_50_74`) et totale (`femmes_total`) jointe sur `(code_region, annee_fin_periode)`.
-* **Indicateurs estimés** :
-  * `nb_femmes_participantes_estime` = $\text{femmes\_50\_74} \times \frac{\text{moy\_taux\_std\_participation}}{100}$ [femmes].
-  * `nb_femmes_non_participantes_estime` = $\text{femmes\_50\_74} - \text{nb\_femmes\_participantes\_estime}$ [femmes].
-  * `nb_femmes_50_74_par_centre` = $\frac{\text{femmes\_50\_74}}{\text{nb\_centre}}$ [femmes par centre].
-
-### 3.4. `int_carte_centres_depistage_ville` : Cartographie des Centres et Densité de Population
-* **Problématique traitée** : *Comment se répartissent les centres de radiologie dans les communes par rapport à la densité de population régionale et à la participation au dépistage ?*
-* **Grain** : `(periode_biennale, code_region, code_departement, ville)` (~9 000 observations sur 2016-2025).
-* **Tables croisées** :
-  * `stg_centres_radiologie` : dénombrement des centres par commune (`nb_centre` [centres]) et création du champ `localisation_complete` (`'VILLE, Département, France'`) pour un géocodage Power BI sans ambiguïté.
-  * `stg_depistage_taux_standardise_2016_2025` : participation régionale (`moy_taux_std_participation` [%]).
-  * `stg_pop_regions_age` (`code_sexe = 'E'`) + superficies officielles INSEE/IGN : calcul de `population_regionale` [habitants], `densite_population_hab_km2` [hab/km²] et `densite_centres_region_pour_100k_hab` [centres pour 100 000 hab].
-
-### 3.5. `int_comparatif_sein_vs_tous_cancers` : Mortalité & Patients Actifs Cancer du Sein vs Tous Cancers (2015-2024)
-Croise la mortalité CépiDc (`2.1 Tumeurs malignes` et `2.1.10 Tumeur maligne du sein`) ventilée au prorata démographique Insee (`stg_pop_regions_age`) avec les effectifs exacts de patients en prise en charge active Ameli (`stg_effectifs_sein` et `stg_effectifs_cancers_age_region`, `dept=999`) pour 18 régions et 15 tranches d'âge quinquennales dès 25 ans (`2 700` lignes).
-* Permet de calculer dans `mart_comparatif_sein_vs_onco` la mortalité `/100k` et le ratio `décès / patients actifs (%)` pour le cancer du sein vs tous cancers (périmètres **Femmes uniquement** et **Tous sexes confondus**).
-
----
-
-## 4. Couche Marts (`models/marts/`) - Modèle en Étoile Power BI
-
-La couche marts expose les dimensions conformes destinées à structurer le modèle relationnel dans Power BI sans créer de relations Many-to-Many.
-
-### 4.1. `dim_regions` : Dimension Partagée des Régions
-
-Ce modèle référence les **18 régions administratives françaises** (13 régions métropolitaines et 5 DROM) et sert d'axe d'analyse unique pour les tables de faits hospitalières et financières :
-
-* **Clé primaire** : `code_region` (code Insee sur 2 caractères : `'01'`, `'11'`, `'84'`, etc.) et `id_region` (hachage SHA-256).
-* **Attributs géographiques** :
-  * `libelle_region` : nom officiel harmonisé de la région.
-  * `zone_geographique` : `'Hexagone'` ou `'Outre-mer'`.
-  * `est_metropole` : booléen (`TRUE`/`FALSE`) permettant de filtrer instantanément la métropole dans Power BI.
-  * `code_iso_region` : code normalisé ISO 3166-2:FR (`'FR-IDF'`, `'FR-ARA'`, `'FR-PAC'`, etc.) reconnu nativement par les cartes choroplèthes et visuels Azure Maps / Shape Map dans Power BI.
-  * `chef_lieu_region` : préfecture de région / chef-lieu administratif.
-
-### 4.2. `mart_depistage_centres_region` : Offre de Centres, Participation et Densité (2014-2022)
-
-* **Grain** : `(annee, code_region)` sur la période **2014-2022** (17 régions actives $\times$ 9 ans = 153 observations).
-* **Hypothèse méthodologique** : Les dates d'ouverture des centres de dépistage ne sont pas disponibles dans la source ; on part du principe qu'ils existent depuis au moins 2014 sans pouvoir le confirmer.
-* **Indicateurs clés prêts pour Power BI** :
-  * `est_derniere_annee` : booléen (`TRUE` pour 2022) permettant de filtrer par défaut dans Power BI afin d'éviter de sommer `nb_centres_region` sur plusieurs années.
-  * `taux_participation_std_pct` [%], `femmes_50_74`, `nb_femmes_participantes_estime`, `nb_femmes_non_participantes_estime`.
-  * `densite_population_hab_km2` [hab/km²], `nb_centres_pour_100k_femmes_50_74`, `densite_centres_pour_100k_hab` et `nb_femmes_50_74_par_centre`.
-
-### 4.3. `mart_carte_centres_ville` : Cartographie des Centres sans Duplication
-
-* **Grain** : `(code_region, code_departement, ville)` (1 ligne par commune, sans duplication temporelle).
-* **Hypothèse méthodologique** : Les dates d'ouverture des centres de dépistage ne sont pas disponibles dans la source ; on part du principe qu'ils existent depuis au moins 2014 sans pouvoir le confirmer.
-* **Conception Power BI** : `nb_centres` est directement sommable à tous les niveaux (commune, département, région, national) sans risque de double-comptage. `localisation_complete` adapte le formatage des DROM (sans `, France`) pour un géocodage fiable dans Power BI.
-
-### 4.4. `dim_tranches_age` : Dimension Partagée des Tranches d'Âge Féminines (Seuil Dépistage 50 Ans)
-
-* **Grain** : `code_tranche_age_5` (`15` tranches quinquennales de `'25-29'` à `'95+'`).
-* **Attributs Power BI** : `libelle_tranche_age_5` trié par `ordre_tranche_age` (`1..15`), `tranche_age_10`, `groupe_depistage` (`'Moins de 50 ans (hors dépistage)'`, `'50-74 ans (cible dépistage)'`, `'75 ans et plus (post-dépistage)'`) trié par `ordre_groupe_depistage` (`1..3`), et booléen `est_cible_depistage` (`TRUE` sur `50-74 ans`).
-
-### 4.5. `mart_correlation_depistage_prevalence_mortalite_region` : Corrélation Dépistage, Prévalence et Mortalité (2015-2022)
-
-* **Grain** : `(annee, code_region)` sur **2015-2022** (`144` lignes : 18 régions $\times$ 8 ans), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
-* **Indicateurs** : dépistage (`femmes_total`, `femmes_50_74`, `nb_femmes_depistees`, `taux_participation_std_pct`), prévalence Ameli (`population_assurees_ameli`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `nb_patientes_total_sein`, `prevalence_active_pct`, `prevalence_surveillance_pct`, `prevalence_totale_pct`) et mortalité (`nb_deces_sein_femmes`, `nb_deces_toutes_causes_femmes`, `nb_deces_sein_moins_50_ans`, `nb_deces_sein_50_74_ans`, `nb_deces_sein_75_ans_plus`, `taux_brut_mortalite_sein_pour_100k`, `taux_mortalite_std_sein_pour_100k`).
-
-### 4.6. `mart_correlation_age_region_sein` : Corrélation Âge × Région (Dépistage, Prévalence et Mortalité, 2015-2022)
-
-* **Grain** : `(annee, code_region, code_tranche_age_5)` sur **2015-2022** (`2 160` lignes), reliée en `1:N` à `dim_regions`, `DIM_annee` et `dim_tranches_age`.
-* **Indicateurs** : `population_femmes`, `taux_participation_brut_tranche_pct` *(sur 50-74 ans)*, `population_assurees_ameli`, `nb_patientes_actives_sein`, `nb_patientes_surveillance_sein`, `nb_patientes_total_sein`, `prevalence_active_pct`, `prevalence_surveillance_pct`, `prevalence_totale_pct`, `nb_deces_sein_femmes` et `nb_deces_toutes_causes_femmes` *(ventilés au prorata démographique)*.
-
-### 4.7. `mart_oncologie_depenses_charge_region` : Budget Oncologie et Charge Hospitalière par Spécialité (2018-2024)
-
-* **Grain** : `(annee, code_region, specialite_oncologique)` sur **2018-2024** (`1 260` lignes : 7 ans $\times$ 18 régions $\times$ 10 spécialités), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
-* **Spécialités détaillées (`specialite_oncologique`, triée par `ordre_specialite`)** : `'Cancer du sein de la femme'` (`est_cancer_sein = TRUE`), `'Cancer bronchopulmonaire'`, `'Cancer de la prostate'`, `'Cancer colorectal'`, et décomposition de l'enveloppe Ameli « Autres cancers » en 6 sous-familles DREES (`'Métastases (secondaires)'`, `'Autres digestifs (pancréas, foie, estomac, œsophage)'`, `'Cancer de la vessie'`, `'Hématologie (leucémies) & SNC'`, `'ORL, Utérus, Peau & Thyroïde'`, `'Autres cancers (non détaillés)'`) ventilées au prorata des séjours hospitaliers régionaux.
-* **Indicateurs pour les 2 Donuts Power BI** : `nb_patients_ameli`, `depense_totale_euros` *(budget total remboursé)*, `nb_sejours_total`, `nb_sejours_ambulatoire_moins_24h`, `nb_sejours_24h_plus` et `nb_journees_estimees`.
-
-### 4.8. `mart_comparatif_sein_vs_onco` : Comparatif Cancer du Sein vs Tous Cancers par Âge et Région (2015-2024)
-* **Source** : `int_comparatif_sein_vs_tous_cancers` (collecte API CépiDc `2.1 Tumeurs malignes` et Ameli `Cancers` `dept=999` via `extract_comparatif_onco.py`).
-* **Grain** : `(annee, code_region, tranche_age)` — `2 700` lignes (10 ans × 18 régions × 15 tranches quinquennales `25-29` à `95+`).
-* **Clés & Relations** : Clé primaire SHA-256 `id_mart_comparatif_sein_onco`, reliée 1:N à `dim_regions` (`code_region`) et `dim_tranches_age` (`tranche_age` → `code_tranche_age_5`).
-* **Mesures clés** : Permet la comparaison directe dans Power BI (mortalité nationale/régionale, taux `/100k` et ratio `décès / patients actifs (%)`) sur les deux périmètres (**Femmes uniquement** et **Tous sexes confondus**) : `nb_deces_sein`, `nb_deces_tous_cancers`, `nb_deces_tous_cancers_femmes`, `taux_mortalite_sein_100k`, `taux_mortalite_tous_cancers_100k`, `taux_mortalite_tous_cancers_femmes_100k`, `nb_patients_actifs_sein`, `nb_patients_actifs_tous_cancers`, `nb_patients_actifs_tous_cancers_femmes`, `ratio_deces_actifs_sein_pct`, `ratio_deces_actifs_tous_cancers_pct`, `ratio_deces_actifs_tous_cancers_femmes_pct`.
-
-### 4.9. `mart_mortalite_std_distribution_region` : Mortalité Standardisée Régionale (Distributions 2014-2022 & Friedman/Wilcoxon)
-* **Grain** : `(annee, code_region)` sur **2014-2024** (`198` lignes : 11 ans $\times$ 18 régions), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee`).
-* **Standardisation directe (`France RP 2022`)** : `taux_mortalite_std_tous_ages_100k`, `taux_mortalite_std_moins_65_100k`, `taux_mortalite_std_50_74_100k`, `taux_mortalite_std_65_84_100k`, `taux_mortalite_std_75_plus_100k`, `taux_mortalite_std_france_100k` et `ecart_std_vs_france_100k`.
-* **Distributions & tests statistiques (`2014-2022`)** : `min_std_2014_2022`, `q1_std_2014_2022`, `mediane_std_2014_2022`, `q3_std_2014_2022`, `max_std_2014_2022`, `iqr_std_2014_2022`, test global de **Friedman** (`friedman_chi2_global = 98,33`, `p = 1,81e-13`) et tests signés de **Wilcoxon** par région vs France (`wilcoxon_stat_vs_france`, `wilcoxon_p_value_brute`, `wilcoxon_p_value_holm`, `statut_wilcoxon_region`).
-
-### 4.10. `mart_depistage_mortalite_delai_region` : Dépistage vs Mortalité avec Décalage Temporel ($t - k$)
-* **Grain** : `(annee_mortalite, code_region, delai_annees)` sur **2014-2024** $\times$ 17 régions hors Mayotte $\times$ 5 délais (`0, 3, 5, 7, 9 ans` $\rightarrow$ `935` lignes), reliée en `1:N` à `dim_regions` (`code_region`) et `DIM_annee` (`annee_mortalite`).
-* **Variables décalées & contrôles** : `taux_participation_std_lag_pct` et `taux_participation_moy_3ans_lag_pct` (historique `2005-2024`), mortalité standardisée contrôlée par classe d'âge (`taux_mortalite_std_50_74_100k`, `taux_mortalite_std_65_84_100k`, `taux_mortalite_std_75_plus_100k`), `zone_geographique`, `densite_population_hab_km2`, `profil_densite`, `nb_centres_pour_100k_femmes_50_74`, traçabilité `millesime_inventaire_centres`, `population_femmes_insee_t` et `population_assurees_ameli_t`.
-
-### 4.11. `mart_depenses_sein_postes_evolution` : Évolution des Dépenses par Poste (2015-2024) & Ratio Cnam vs ONDAM
-* **Grain** : `(annee, statut_cancer, poste_depense, secteur_hospitalier)` sur **2015-2024** (`460` lignes), reliée à `DIM_annee` (`annee`).
-* **Décomposition analytique** : **4 grands pôles** (`pole_depense_4` trié par `ordre_pole_4` : Médicaments Ville & Liste en sus `+137,0 %`, Hospitalisations `+53,0 %`, Soins de ville `+45,1 %`, Prestations en espèces `+54,7 %`) et **19 postes détaillés** Ameli (`indice_evolution_base_100_2015`, `tcac_2015_2024_pct`, `taux_recours_poste_pct`, `cout_moyen_par_patiente_recourante_euros`).
-* **Comparaison homogène des dénominateurs** : part du cancer du sein dans l'Oncologie Cnam (`16,95 %` en 2022), part **100 % homogène** dans la Cartographie Cnam Toutes Pathologies (`193,76 Md€` $\rightarrow$ **`2,16 %`** en 2022) et rapprochement indicatif avec l'ONDAM exécuté (`247,1 Md€` $\rightarrow$ **`1,69 %`**).
-
-### 4.12. Schéma en Étoile dans Power BI
-
-```
-                    ┌─────────────────────────┐
-                    │       dim_regions       │
-                    │   (mart_projet_cancer)  │
-                    │  code_region (PK / 1:N) │
-                    └────────────┬────────────┘
-                                 │
-         ┌───────────────────────┴───────────────────────┐
-         │                                               │
-         ▼                                               ▼
-┌─────────────────────────────────┐   ┌─────────────────────────────────┐
-│   int_charge_hospitaliere_sein  │   │  int_depenses_regionales_sein   │
-│       (int_projet_cancer)       │   │       (int_projet_cancer)       │
-│  code_region (FK), annee, ...   │   │ code_region (FK), annee, type.. │
-└─────────────────────────────────┘   └─────────────────────────────────┘
-```
-*(Note : la dimension calendrier `dim_calendrier` sera générée directement via Power Query / DAX dans Power BI).*
-
----
-
-## 5. Couche Expérimentation & R&D (`models/int_test_val/`) - Dataset `Int_test_val`
-
-Cet espace dédié et isolé permet de prototyper et tester de nouvelles analyses transversales sans interférer avec les tables de production partagées par l'équipe. Il est matérialisé sous la forme de tables BigQuery dans le dataset distinct **`Int_test_val`**.
-
-### 5.1. `int_mortalite_territoriale_sein` : Analyse Territoriale de la Mortalité
-* **Problématique traitée** : *La mortalité par cancer du sein est-elle la même selon les territoires ?*
-* **Grain** : `(annee, code_region)` (2014-2024, 198 observations : 18 régions $\times$ 11 années).
-* **Tables croisées** :
-  * `stg_effectif_mortalite_region` (décès par cancer du sein chez la femme, tranches décennales).
-  * `stg_effectif_mortalite_toutescauses_region` (décès féminins toutes causes).
-  * `stg_mortalite_region` (taux standardisés sur l'âge et décès par grandes tranches <65, 65-84, 85+).
-  * `stg_pop_cible_regions` (population totale et cible 50-74 ans).
-* **Indicateurs et composantes brutes DAX** :
-  * `nb_deces_sein` [décès], `nb_deces_toutes_causes_femmes` [décès], `population_femmes_total` [habitantes].
-  * `part_cancer_sein_mortalite_totale` = $\frac{\text{nb\_deces\_sein}}{\text{nb\_deces\_toutes\_causes\_femmes}}$ (poids du cancer du sein dans la mortalité féminine).
-  * `taux_brut_mortalite_pour_100k_femmes` [décès pour 100 000].
-  * `taux_std_moins_65_pour_100000`, `taux_std_65_84_pour_100000`, `taux_std_85_plus_pour_100000` et moyenne standardisée.
-
-### 5.2. `int_impact_depistage_territoires` : Évaluation Dépistage, Activité et Mortalité
-* **Problématique traitée** : *Le dépistage organisé a-t-il un impact mesurable sur la précocité des diagnostics, la lourdeur des soins et la mortalité ?*
-* **Grain** : `(annee, code_region)` (2016-2024, 162 observations : 18 régions $\times$ 9 années).
-* **Tables croisées** :
-  * `stg_depistage_taux_standardise_2016_2025` (taux de participation départementaux agrégés à la région).
-  * `stg_depistage_indicateurs_cancers_regions` (cancers détectés `NC01`, in situ `NC04`, petites tumeurs $\le 10$ mm `NC08`, taux de détection pour 1 000 `TC01`).
-  * `int_charge_hospitaliere_sein` (DMS en jours, part des séjours courts $\le 7$j, part ambulatoire < 24h, effectifs de patientes).
-  * `stg_mortalite_region` (mortalité standardisée et volume de décès).
-* **Indicateurs d'impact** :
-  * Participation : `taux_participation_depistage_std_pct` [%].
-  * Précocité diagnostique : `part_cancers_inf_ou_egal_10mm_pct` [%], `part_cancers_in_situ_pct` [%].
-  * Virage ambulatoire & durée de soins : `dms_jours` [jours], `part_sejours_courts_pct` [%], `part_sejours_ambulatoires_pct` [%].
-  * Corrélation mortalité : `taux_mortalite_std_moyen_pour_100000` [pour 100 000].
-
----
-
-### 5.3. `int_incidence_age_depistage` : Dynamique de l'Incidence et Dépistage Organisé
-* **Problématique traitée** : *L'incidence du cancer du sein augmente-t-elle chez les patientes de moins de 50 ans non éligibles au dépistage organisé ?*
-* **Nettoyage appliqué** : Exclusion des tranches d'âge pédiatriques et adolescentes (< 20 ans) présentant une incidence quasi nulle (moins de 0,05 % des cas), afin de focaliser l'analyse sur la population adulte exposée et d'éviter de fausser les dénominateurs.
-* **Constat épidémiologique clé** :
-  * Chez les femmes de **20 à 49 ans (hors dépistage)**, le taux d'incidence brut adulte a progressé de **63,23** (1990) à **98,46** (2023) pour 100 000 femmes, soit une hausse de **+55,7 %** (+14,4 % depuis 2004).
-  * La hausse est particulièrement soutenue chez les jeunes femmes :
-    * 25-29 ans : de 7,5 à 12,5 / 100k (**+66,7 %**)
-    * 30-34 ans : de 25,8 à 43,1 / 100k (**+67,1 %**)
-    * 35-39 ans : de 63,1 à 96,0 / 100k (**+52,1 %**)
-    * 40-44 ans : de 129,2 à 157,1 / 100k (**+21,6 %**)
-    * 45-49 ans : de 198,5 à 259,3 / 100k (**+30,6 %**)
-  * Chez les femmes de **50 à 74 ans (cible du dépistage)**, après un pic en 2004 lié à la mise en place du dépistage (341,3 / 100k), le taux s'est stabilisé (332,0 en 2023, soit -2,7 % par rapport à 2004).
-* **Grain & Structure** : 612 observations (1990-2023) réparties en 3 niveaux d'agrégation (`niveau_agregation`) :
-  * `Tranche quinquennale` : 14 tranches adultes de 20-24 ans à 85 ans et plus (476 lignes).
-  * `Groupe dépistage` : 3 groupes macro (`20-49 ans (hors dépistage)`, `50-74 ans (cible dépistage)`, `75 ans et plus`, 102 lignes).
-  * `Total national` : total France entière 20 ans et plus (34 lignes).
-* **Indicateurs et Composantes DAX** :
-  * `nb_nouveaux_cas` [cas], `nb_personnes_annees` [personnes-années], `total_cas_annee` [cas].
-  * `taux_incidence_brut` [cas pour 100 000 femmes] avec bornes IC 95 % `taux_incidence_ic_inf` et `taux_incidence_ic_sup`.
-  * `part_cas_annee_pct` : part de la tranche dans le total national annuel [%].
-  * `indice_base_1990` : indice d'évolution en base 100 en 1990 [indice].
-  * `indice_base_2004` : indice d'évolution en base 100 en 2004 [indice].
-  * `evolution_pct_depuis_1990` [%] et `evolution_pct_depuis_2004` [%].
-  * `ordre_affichage` (1 à 14, 101 à 103, 200) pour garantir le tri chronologique natif sur les axes Power BI.
-
----
-
-## 6. Tests de Données et Validation de Qualité
-
-La couche Gold (`models/marts/`, 11 tables dbt dans `mart_projet_cancer`) intègre **208 tests dbt** validés avec succès (`dbt test --select marts` → `PASS=208 WARN=0 ERROR=0`) sur un total de 461 tests définis dans le projet :
-
-* **Unicité (`unique`)** : vérifiée sur toutes les clés primaires et synthétiques SHA-256 (`id_region`, `code_region`, `code_iso_region`, `id_charge_hospitaliere`, `id_depense_regionale`, `id_mortalite_territoriale`, `id_impact_depistage`, etc.).
-* **Complétude (`not_null`)** : appliqué sur toutes les dimensions clés (années, codes région, montants, libellés).
-* **Conformité des domaines (`accepted_values`)** :
-  * Codes sexe : `['E', 'F', 'H']` / Libellés : `['Ensemble', 'Femmes', 'Hommes']`.
-  * Zones géographiques : `['Hexagone', 'Outre-mer']`.
-  * Types de zones : `['National', 'Région', 'Département']`.
-  * Catégories de dépenses et tranches d'âge.
-
----
-
-## 7. Guide d'Exécution
-
-### Activer l'environnement virtuel
+### 1. Cloner le dépôt et installer l'environnement Python
 ```powershell
-# Windows PowerShell
-Set-Location -Path "C:\dev\dbt-workspace\mon_projet"
-& "C:\dev\dbt-workspace\.venv\Scripts\Activate.ps1"
+git clone https://github.com/Hythus/dbt-bigquery-analyse-cancer-du-sein.git
+cd dbt-bigquery-analyse-cancer-du-sein
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install dbt-core dbt-bigquery pandas requests google-cloud-bigquery pdfplumber
 ```
 
-### Commandes usuelles
+### 2. Configurer l'authentification BigQuery et le profil dbt
+Définissez votre clé de compte de service GCP (ou utilisez `gcloud auth application-default login`) sans jamais la placer dans le dépôt :
 ```powershell
-# Vérifier la connexion BigQuery
+$env:GOOGLE_APPLICATION_CREDENTIALS="C:\chemin\securise\votre-cle-service-account.json"
+```
+
+Exemple de configuration `~/.dbt/profiles.yml` :
+```yaml
+mon_projet:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: cancer-du-sein-513216
+      dataset: stg_projet_cancer
+      threads: 4
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+      location: EU
+```
+
+### 3. Tester la connexion et exécuter la pipeline dbt
+```powershell
+# Vérifier la connexion BigQuery et la validité du projet
 dbt debug
 
-# Construire uniquement la couche staging
-dbt build --select staging
-
-# Construire uniquement les tables intermédiaires
-dbt build --select intermediate
-
-# Exécuter l'ensemble des modèles et tests du projet
+# Construire les modèles et exécuter l'intégralité des 474 tests de qualité
 dbt build
 ```
+
+---
+
+## 6. Auteur
+
+**Valentin Devalckeneer** — *Data Analyst / Analytics Engineer*  
+Projet de fin de cursus **DataBird** — Novembre 2026  
+Dépôt GitHub : [Hythus/dbt-bigquery-analyse-cancer-du-sein](https://github.com/Hythus/dbt-bigquery-analyse-cancer-du-sein)

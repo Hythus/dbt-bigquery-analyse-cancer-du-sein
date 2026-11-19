@@ -1,3 +1,5 @@
+{{ config(materialized='table') }}
+
 with regions as (
 
     select
@@ -10,61 +12,56 @@ with regions as (
 pop_cible as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        cast(femmes_total as int64) as femmes_total,
-        cast(femmes_50_74 as int64) as femmes_50_74
-    from {{ source('data_clean', 'pop_cible_regions') }}
-    where annee between 2015 and 2022
-
-),
-
-depistage_unpivoted as (
-
-    {% for yr in range(2015, 2023) %}
-    select
-        {{ yr }} as annee,
-        case trim(localisation)
-            when 'Ile-de-France' then 'Île-de-France'
-            when 'Centre-Val de Loire' then 'Centre-Val-de-Loire'
-            else trim(localisation)
-        end as nom_region,
-        safe_cast(nombre_de_femmes_depistees_annee_{{ yr }} as int64) as nb_femmes_depistees,
-        round(safe_cast(taux_de_participation_insee_standardise_annee_{{ yr }} as float64), 2) as taux_participation_std_pct
-    from {{ source('data_clean', 'Participation_depistage_2005-2025') }}
-    {% if not loop.last %}union all{% endif %}
-    {% endfor %}
+        annee,
+        code_region,
+        cast(population_femmes_total as int64) as femmes_total,
+        cast(population_femmes_50_74_ans as int64) as femmes_50_74
+    from {{ ref('stg_pop_cible_regions') }}
+    where annee between 2015 and 2024
 
 ),
 
 depistage_region as (
 
     select
-        d.annee,
+        e.annee,
         r.code_region,
-        d.nb_femmes_depistees,
-        d.taux_participation_std_pct
-    from depistage_unpivoted d
+        cast(e.nb_femmes_depistees as int64) as nb_femmes_depistees,
+        round(e.taux_participation_std_pct, 2) as taux_participation_std_pct
+    from {{ ref('stg_depistage_evolution_2005_2025') }} e
     inner join regions r
-      on d.nom_region = r.nom_region
+      on case
+            when e.nom_zone_geographique = 'Centre-Val de Loire' then 'Centre-Val-de-Loire'
+            else e.nom_zone_geographique
+         end = r.nom_region
+    where e.type_zone_geographique = 'Région'
+      and e.annee between 2015 and 2024
 
 ),
 
 effectifs_sein_region as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        cast(max(population) as int64) as population_assurees_ameli,
-        cast(max(case when top = 'CAN_SEI_ACT' then nb_patients end) as int64) as nb_patientes_actives_sein,
-        cast(max(case when top = 'CAN_SEI_SUR' then nb_patients end) as int64) as nb_patientes_surveillance_sein,
-        cast(sum(nb_patients) as int64) as nb_patientes_total_sein,
-        round(max(case when top = 'CAN_SEI_ACT' then cast(prevalence_pct as float64) end), 3) as prevalence_active_pct,
-        round(max(case when top = 'CAN_SEI_SUR' then cast(prevalence_pct as float64) end), 3) as prevalence_surveillance_pct,
-        round(sum(cast(prevalence_pct as float64)), 3) as prevalence_totale_pct
-    from {{ source('data_clean', 'effectifs_region') }}
-    where top in ('CAN_SEI_ACT', 'CAN_SEI_SUR')
-      and annee between 2015 and 2022
+        annee,
+        code_region,
+        cast(max(population_regionale) as int64) as population_assurees_ameli,
+        cast(coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then nb_patients end), 0) as int64) as nb_patientes_actives_sein,
+        cast(coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then nb_patients end), 0) as int64) as nb_patientes_surveillance_sein,
+        cast(
+            coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then nb_patients end), 0)
+            + coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then nb_patients end), 0)
+            as int64
+        ) as nb_patientes_total_sein,
+        round(coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then taux_prevalence_pct end), 0.0), 3) as prevalence_active_pct,
+        round(coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then taux_prevalence_pct end), 0.0), 3) as prevalence_surveillance_pct,
+        round(
+            coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then taux_prevalence_pct end), 0.0)
+            + coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then taux_prevalence_pct end), 0.0),
+            3
+        ) as prevalence_totale_pct
+    from {{ ref('stg_effectifs_region') }}
+    where code_pathologie in ('CAN_SEI_ACT', 'CAN_SEI_SUR')
+      and annee between 2015 and 2024
     group by 1, 2
 
 ),
@@ -72,12 +69,13 @@ effectifs_sein_region as (
 mortalite_sein_effectifs as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        cast(sum(deces) as int64) as nb_deces_sein_femmes
-    from {{ source('data_clean', 'effectif_mortalite_sein_region') }}
-    where sexe = 'Femmes'
-      and annee between 2015 and 2022
+        annee_deces as annee,
+        code_region,
+        cast(sum(nb_deces) as int64) as nb_deces_sein_femmes
+    from {{ ref('stg_effectif_mortalite_region') }}
+    where cause_initiale_deces = '2.1.10 Tumeur maligne du sein'
+      and sexe = 'Femmes'
+      and annee_deces between 2015 and 2024
     group by 1, 2
 
 ),
@@ -85,12 +83,13 @@ mortalite_sein_effectifs as (
 mortalite_toutes_causes as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        cast(sum(deces) as int64) as nb_deces_toutes_causes_femmes
-    from {{ source('data_clean', 'effectif_mortalite_region') }}
-    where sexe = 'Femmes'
-      and annee between 2015 and 2022
+        annee_deces as annee,
+        code_region,
+        cast(sum(nb_deces) as int64) as nb_deces_toutes_causes_femmes
+    from {{ ref('stg_effectif_mortalite_toutescauses_region') }}
+    where cause_initiale_deces = 'Toutes causes'
+      and sexe = 'Femmes'
+      and annee_deces between 2015 and 2024
     group by 1, 2
 
 ),
@@ -115,9 +114,10 @@ mortalite_std as (
     select
         annee,
         code_region,
-        taux_mortalite_std_tous_ages_100k as taux_mortalite_std_sein_pour_100k
+        taux_mortalite_std_tous_ages_100k as taux_mortalite_std_sein_pour_100k,
+        taux_mortalite_std_50_74_100k as taux_mortalite_std_50_74_sein_pour_100k
     from {{ ref('mart_mortalite_std_distribution_region') }}
-    where annee between 2015 and 2022
+    where annee between 2015 and 2024
 
 ),
 
@@ -143,7 +143,10 @@ joined as (
         mgd.nb_deces_sein_50_74_ans,
         mgd.nb_deces_sein_75_ans_plus,
         round(safe_divide(cast(ms.nb_deces_sein_femmes as float64) * 100000.0, cast(pc.femmes_total as float64)), 2) as taux_brut_mortalite_sein_pour_100k,
-        mstd.taux_mortalite_std_sein_pour_100k
+        mstd.taux_mortalite_std_sein_pour_100k,
+        mstd.taux_mortalite_std_50_74_sein_pour_100k,
+        round(safe_divide(cast(ms.nb_deces_sein_femmes as float64) * 100.0, cast(nullif(mtc.nb_deces_toutes_causes_femmes, 0) as float64)), 2) as part_deces_sein_dans_toutes_causes_pct,
+        round(safe_divide(cast(ms.nb_deces_sein_femmes as float64) * 100.0, cast(nullif(eff.nb_patientes_actives_sein, 0) as float64)), 2) as ratio_deces_patientes_actives_pct
     from pop_cible pc
     inner join regions r
       on pc.code_region = r.code_region

@@ -12,10 +12,9 @@ from google.cloud import bigquery
 PROJECT_ID = "cancer-du-sein-513216"
 DATASET_ID = "Data_brute"
 OUT_DIR = Path(__file__).resolve().parent
-DEFAULT_CREDS = Path(r"C:\Users\Deval\Documents\data bird\Projet\cancer-du-sein-513216-f2aa37ec2318.json")
-
-if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ and DEFAULT_CREDS.exists():
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(DEFAULT_CREDS)
+# Authentification GCP via GOOGLE_APPLICATION_CREDENTIALS ou Application Default Credentials (gcloud auth)
+if "GOOGLE_APPLICATION_CREDENTIALS" not in os.environ:
+    print("Info : aucune variable GOOGLE_APPLICATION_CREDENTIALS détectée (utilisation des Application Default Credentials GCP).")
 
 
 def fetch_cepidc_mortalite_tumeurs() -> pd.DataFrame:

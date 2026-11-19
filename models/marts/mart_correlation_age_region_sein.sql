@@ -1,3 +1,5 @@
+{{ config(materialized='table') }}
+
 with regions as (
 
     select
@@ -10,10 +12,13 @@ with regions as (
 pop_age as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        trim(tranche_age_5) as code_tranche_age_5,
-        cast(population as int64) as population_femmes,
+        annee,
+        code_region,
+        case
+            when age_min = 95 then '95+'
+            else replace(tranche_age, ' ans', '')
+        end as code_tranche_age_5,
+        population as population_femmes,
         case
             when age_min between 25 and 34 then '25-34'
             when age_min between 35 and 44 then '35-44'
@@ -24,10 +29,10 @@ pop_age as (
             when age_min between 85 and 94 then '85-94'
             else '95p'
         end as code_tranche_10
-    from {{ source('data_clean', 'pop_regions_age') }}
-    where sexe = 'F'
+    from {{ ref('stg_pop_regions_age') }}
+    where code_sexe = 'F'
       and age_min >= 25
-      and annee between 2015 and 2022
+      and annee between 2015 and 2024
 
 ),
 
@@ -48,7 +53,7 @@ pop_age_avec_part as (
 
 taux_brut_depistage_unpivoted as (
 
-    {% for yr in range(2015, 2023) %}
+    {% for yr in range(2015, 2025) %}
     {% set prev_yr = yr - 1 %}
     select
         {{ yr }} as annee,
@@ -82,19 +87,28 @@ taux_brut_depistage as (
 effectifs_sein_age as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        trim(tranche_age_5) as code_tranche_age_5,
-        cast(max(population) as int64) as population_assurees_ameli,
-        cast(max(case when type_cancer_sein = 'Cancer du sein de la femme actif' then nb_patients end) as int64) as nb_patientes_actives_sein,
-        cast(max(case when type_cancer_sein = 'Cancer du sein de la femme sous surveillance' then nb_patients end) as int64) as nb_patientes_surveillance_sein,
-        cast(max(case when type_cancer_sein is null then nb_patients end) as int64) as nb_patientes_total_sein,
-        round(max(case when type_cancer_sein = 'Cancer du sein de la femme actif' then cast(prevalence_pct as float64) end), 3) as prevalence_active_pct,
-        round(max(case when type_cancer_sein = 'Cancer du sein de la femme sous surveillance' then cast(prevalence_pct as float64) end), 3) as prevalence_surveillance_pct,
-        round(max(case when type_cancer_sein is null then cast(prevalence_pct as float64) end), 3) as prevalence_totale_pct
-    from {{ source('data_clean', 'effectifs_sein') }}
-    where sexe = 'FEMMES'
-      and annee between 2015 and 2022
+        annee,
+        code_region,
+        code_tranche_age_5,
+        cast(max(population_assuree) as int64) as population_assurees_ameli,
+        cast(coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then nb_patients end), 0) as int64) as nb_patientes_actives_sein,
+        cast(coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then nb_patients end), 0) as int64) as nb_patientes_surveillance_sein,
+        cast(
+            coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then nb_patients end), 0)
+            + coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then nb_patients end), 0)
+            as int64
+        ) as nb_patientes_total_sein,
+        round(coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then taux_prevalence_pct end), 0.0), 3) as prevalence_active_pct,
+        round(coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then taux_prevalence_pct end), 0.0), 3) as prevalence_surveillance_pct,
+        round(
+            coalesce(max(case when code_pathologie = 'CAN_SEI_ACT' then taux_prevalence_pct end), 0.0)
+            + coalesce(max(case when code_pathologie = 'CAN_SEI_SUR' then taux_prevalence_pct end), 0.0),
+            3
+        ) as prevalence_totale_pct
+    from {{ ref('stg_effectifs_cancers_age_region') }}
+    where sexe = 'Femmes'
+      and code_pathologie in ('CAN_SEI_ACT', 'CAN_SEI_SUR')
+      and annee between 2015 and 2024
     group by 1, 2, 3
 
 ),
@@ -102,36 +116,40 @@ effectifs_sein_age as (
 mortalite_sein_10 as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        trim(classe_age) as code_tranche_10,
-        cast(deces as float64) as deces_sein_10
-    from {{ source('data_clean', 'effectif_mortalite_sein_region') }}
-    where sexe = 'Femmes'
-      and annee between 2015 and 2022
+        annee_deces as annee,
+        code_region,
+        tranche_age_10 as code_tranche_10,
+        cast(sum(nb_deces) as float64) as deces_sein_10
+    from {{ ref('stg_effectif_mortalite_region') }}
+    where cause_initiale_deces = '2.1.10 Tumeur maligne du sein'
+      and sexe = 'Femmes'
+      and annee_deces between 2015 and 2024
+    group by 1, 2, 3
 
 ),
 
 mortalite_tc_10 as (
 
     select
-        cast(annee as int64) as annee,
-        lpad(trim(cast(code_region as string)), 2, '0') as code_region,
-        trim(classe_age) as code_tranche_10,
-        cast(deces as float64) as deces_tc_10
-    from {{ source('data_clean', 'effectif_mortalite_region') }}
-    where sexe = 'Femmes'
-      and annee between 2015 and 2022
+        annee_deces as annee,
+        code_region,
+        tranche_age_10 as code_tranche_10,
+        cast(sum(nb_deces) as float64) as deces_tc_10
+    from {{ ref('stg_effectif_mortalite_toutescauses_region') }}
+    where cause_initiale_deces = 'Toutes causes'
+      and sexe = 'Femmes'
+      and annee_deces between 2015 and 2024
+    group by 1, 2, 3
 
 ),
 
-joined as (
+base as (
 
     select
         p.annee,
         p.code_region,
         p.code_tranche_age_5,
-        p.population_femmes,
+        cast(p.population_femmes as int64) as population_femmes,
         tb.taux_participation_brut_tranche_pct,
         eff.population_assurees_ameli,
         eff.nb_patientes_actives_sein,
@@ -140,8 +158,8 @@ joined as (
         eff.prevalence_active_pct,
         eff.prevalence_surveillance_pct,
         eff.prevalence_totale_pct,
-        round(ms.deces_sein_10 * p.part_pop_dans_tranche_10, 2) as nb_deces_sein_femmes,
-        round(mtc.deces_tc_10 * p.part_pop_dans_tranche_10, 2) as nb_deces_toutes_causes_femmes
+        round(coalesce(ms.deces_sein_10, 0.0) * p.part_pop_dans_tranche_10, 2) as nb_deces_sein_femmes,
+        round(coalesce(mtc.deces_tc_10, 0.0) * p.part_pop_dans_tranche_10, 2) as nb_deces_toutes_causes_femmes
     from pop_age_avec_part p
     inner join regions r
       on p.code_region = r.code_region
@@ -161,6 +179,18 @@ joined as (
       on p.annee = mtc.annee
      and p.code_region = mtc.code_region
      and p.code_tranche_10 = mtc.code_tranche_10
+
+),
+
+joined as (
+
+    select
+        *,
+        round(safe_divide(nb_deces_sein_femmes * 100000.0, cast(population_femmes as float64)), 2) as taux_mortalite_sein_pour_100k,
+        round(safe_divide(nb_deces_toutes_causes_femmes * 100000.0, cast(population_femmes as float64)), 2) as taux_mortalite_toutes_causes_pour_100k,
+        round(coalesce(safe_divide(nb_deces_sein_femmes * 100.0, nullif(nb_deces_toutes_causes_femmes, 0.0)), 0.0), 2) as part_deces_sein_dans_toutes_causes_pct,
+        round(safe_divide(nb_deces_sein_femmes * 100.0, nullif(cast(nb_patientes_actives_sein as float64), 0.0)), 2) as ratio_deces_patientes_actives_pct
+    from base
 
 )
 

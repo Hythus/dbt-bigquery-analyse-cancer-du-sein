@@ -89,7 +89,7 @@ sources:
 
 models:
   - name: stg_charge_france
-    description: "Staging des données de séjours hospitaliers en France (niveau national)."
+    description: "Staging des séjours hospitaliers MCO en France entière (source DREES, dédupliqué sur territoire × année × pathologie × famille de tumeur)."
     columns:
       - name: territoire
         description: "Niveau géographique du séjour ('France entière')."
@@ -143,7 +143,7 @@ models:
         description: "Nombre total de journées d'hospitalisation estimées."
 
   - name: stg_charge_region
-    description: "Staging des données de séjours hospitaliers par région."
+    description: "Staging des séjours hospitaliers MCO par région administrative (source DREES, noms de régions harmonisés, dédupliqué sur région × année × pathologie × famille de tumeur)."
     columns:
       - name: nom_region
         description: "Nom standardisé de la région administrative."
@@ -197,7 +197,7 @@ models:
         description: "Volume total de journées d'hospitalisation estimées."
 
   - name: stg_dms_france
-    description: "Staging de la durée moyenne de séjour (DMS) au niveau France."
+    description: "Staging de la durée moyenne de séjour (DMS) en hospitalisation complète (≥ 24h) au niveau national (source DREES, dédupliqué sur territoire × année × pathologie × famille de tumeur)."
     columns:
       - name: territoire
         description: "Échelon géographique ('France entière')."
@@ -217,7 +217,7 @@ models:
         description: "Durée moyenne de séjour exprimée en jours."
 
   - name: stg_dms_region
-    description: "Staging de la durée moyenne de séjour (DMS) par région."
+    description: "Staging de la durée moyenne de séjour (DMS) en hospitalisation complète (≥ 24h) par région (source DREES, noms de régions harmonisés, dédupliqué sur région × année × pathologie × famille de tumeur)."
     columns:
       - name: nom_region
         description: "Nom standardisé de la région administrative."
@@ -239,7 +239,7 @@ models:
         description: "Durée moyenne de séjour régionale exprimée en jours."
 
   - name: stg_depenses_onco
-    description: "Staging des dépenses de santé en oncologie par statut et poste."
+    description: "Staging des dépenses remboursées par l'Assurance Maladie en oncologie par localisation, statut, poste et secteur (source Cnam Cartographie des pathologies, dédupliqué sur année × localisation × statut × catégorie × poste × secteur)."
     columns:
       - name: annee
         description: "Année de comptabilisation des dépenses remboursées."
@@ -417,7 +417,7 @@ models:
         description: "Première année historique incluse dans la cohorte d'estimation."
 
   - name: stg_incidence_france_age
-    description: "Staging de l'incidence nationale par classe d'âge."
+    description: "Staging de l'incidence nationale du cancer du sein par classe d'âge quinquennale et intervalles de confiance à 95 % (source Santé publique France / Francim, dédupliqué sur année × sexe × tranche d'âge)."
     columns:
       - name: annee
         description: "Année d'estimation de l'incidence."
